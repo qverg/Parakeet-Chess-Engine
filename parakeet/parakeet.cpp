@@ -5,6 +5,8 @@ using namespace bitboards;
 
 void populateBitboards();
 bitboard generateKingMoves();
+bitboard generateKnightMoves();
+bitboard generatePawnMoves();
 
 int main() {
     //populateBitboards();
