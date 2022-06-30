@@ -246,6 +246,44 @@ def generateWhitePawnMovesCaptures() -> dict[str: str]:
 
     return moves
 
+NORTH = 0
+SOUTH = 1
+EAST = 2
+WEST = 3
+
+NORTHEAST = 4
+SOUTHEAST = 5
+NORTHWEST = 6
+SOUTHWEST = 7
+
+DIRECTIONS = ["NORTH", "SOUTH", "EAST", "WEST", "NORTHEAST", "SOUTHEAST", "NORTHWEST", "SOUTHWEST"]
+
+def getMovesInDirection(c: tuple, direction) -> str:
+    moves = []
+    last = c
+    while withinBounds(direction(last)):
+        last = direction(last)
+        moves.append(coordsToSquare(last))
+    return squareListToBitString(moves)
+
+def generateCardinals() -> list[list[str]]:
+    rays = [[], [], [], [], [], [], [], []]
+    for i in range(64):
+        c = squareToCoords(i)
+
+        rays[NORTH].append(getMovesInDirection(c, north))
+        rays[SOUTH].append(getMovesInDirection(c, south))
+        rays[EAST].append(getMovesInDirection(c, east))
+        rays[WEST].append(getMovesInDirection(c, west))
+        rays[NORTHEAST].append(getMovesInDirection(c, northeast))
+        rays[SOUTHEAST].append(getMovesInDirection(c, southeast))
+        rays[NORTHWEST].append(getMovesInDirection(c, northwest))
+        rays[SOUTHWEST].append(getMovesInDirection(c, southwest))
+
+    return rays
+
+
+"""
 kingMoves = generateKingMoves()
 queenMoves = generateQueenMoves()
 bishopMoves = generateBishopMoves()
@@ -260,3 +298,11 @@ whitePawnsCaptures= generateWhitePawnMovesCaptures()
 
 for key, value in whitePawnsCaptures.items():
     print(f"whitePawnMovesCaptures[bitboard(\"{key}\")] = bitboard(\"{value}\");")
+"""
+
+print("const bitboard RAYS[8][64] = {")
+for dir, movesInDir in enumerate(generateCardinals()):
+    print("\t{")
+    for ray in movesInDir:
+        print(f"\tbitboard(\"{ray}\"),")
+    print("\t},")
