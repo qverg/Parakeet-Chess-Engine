@@ -7,9 +7,9 @@
 using Coordinate = std::array<int, 2>;
 
 void generateMovesInDirection(const Coordinate coord, const Board& board, const std::function<Coordinate(Coordinate)>& directionFunc,
-                                std::vector<Move>& moves, const int playingAs, const int opponent);
+                                std::vector<Move>& moves, const Side playingAs, const Side opponent);
 
-std::vector<Move> generateMoves(const unsigned short square, const Board& board) {
+std::vector<Move> generateMoves(const unsigned short square, Board& board) {
     std::vector<Move> moves;
     Piece piece = board.position[square];
     
@@ -25,9 +25,9 @@ std::vector<Move> generateMoves(const unsigned short square, const Board& board)
     Coordinate c = {square % 8, square / 8};
 
     switch(piece.type) {
-        case EMPTY:
+        case PieceType::EMPTY:
             break;
-        case KING: {
+        case PieceType::KING: {
             // king moves
             std::array<Coordinate, 8> candidates = { {
                 NORTH(c), SOUTH(c), EAST(c), WEST(c),
@@ -37,28 +37,29 @@ std::vector<Move> generateMoves(const unsigned short square, const Board& board)
             for (Coordinate& candidate : candidates) {
                 unsigned short newSquare = COORD_TO_SQUARE(candidate);
                 if (WITHIN_BOUNDS(candidate)) {
-                    if (board.position[newSquare].type == EMPTY) {
+                    if (board.position[newSquare].type == PieceType::EMPTY) {
                         moves.emplace_back(square, newSquare);
-                    } else if (board.position[newSquare].side == BLACK) {
+                    } else if (board.position[newSquare].side == Side::BLACK) {
                         moves.emplace_back(square, newSquare, 1);
                     }
                 }
             }
 
             if (board.castlingRights[piece.side]) {
-                if (board.position[square+1].type == EMPTY && board.position[square+2].type == EMPTY) {
+                if (board.position[square+1].type == PieceType::EMPTY && board.position[square+2].type == PieceType::EMPTY) {
                     moves.emplace_back(square, square+2, 0, 0, 1, 0); // king-side castle
                 }
-                if (board.position[square-1].type == EMPTY && board.position[square-2].type == EMPTY && board.position[square-3].type == EMPTY) {
+                if (board.position[square-1].type == PieceType::EMPTY && board.position[square-2].type == PieceType::EMPTY 
+                    && board.position[square-3].type == PieceType::EMPTY) {
                     moves.emplace_back(square, square-2, 0, 0, 1, 1); // queen-side castle
                 }
             }
         } break;
 
-        case QUEEN: {
+        case PieceType::QUEEN: {
             // queen moves
             // write function for casting ray in certain direction
-            int opponent = (piece.side == WHITE) ? BLACK : WHITE;
+            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(NORTH(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(SOUTH(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(EAST(coordinate)); }, moves, piece.side, opponent);
@@ -69,27 +70,27 @@ std::vector<Move> generateMoves(const unsigned short square, const Board& board)
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(NORTHWEST(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(SOUTHWEST(coordinate)); }, moves, piece.side, opponent);
         } break;
-        case BISHOP: {
+        case PieceType::BISHOP: {
             // bishop moves
-            int opponent = (piece.side == WHITE) ? BLACK : WHITE;
+            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(NORTHEAST(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(SOUTHEAST(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(NORTHWEST(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(SOUTHWEST(coordinate)); }, moves, piece.side, opponent);
         } break;
-        case KNIGHT: {
+        case PieceType::KNIGHT: {
             // knight moves
 
         } break;
-        case ROOK: {
+        case PieceType::ROOK: {
             // rook moves
-            int opponent = (piece.side == WHITE) ? BLACK : WHITE;
+            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(NORTH(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(SOUTH(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(EAST(coordinate)); }, moves, piece.side, opponent);
             generateMovesInDirection(c, board, [&](Coordinate coordinate) { return Coordinate(WEST(coordinate)); }, moves, piece.side, opponent);
         } break;
-        case PAWN: {
+        case PieceType::PAWN: {
             // pawn moves
             // remember to mark promotions and double pawn pushes!
 
@@ -100,7 +101,7 @@ std::vector<Move> generateMoves(const unsigned short square, const Board& board)
 }
 
 void generateMovesInDirection(const Coordinate coord, const Board& board, const std::function<Coordinate(Coordinate)>& directionFunc,
-                                std::vector<Move>& moves, const int playingAs, const int opponent) {
+                                std::vector<Move>& moves, const Side playingAs, const Side opponent) {
     unsigned short nextSquare;
     Coordinate nextCoord;
     Coordinate lastCoord = coord;
@@ -112,7 +113,7 @@ void generateMovesInDirection(const Coordinate coord, const Board& board, const 
         nextSquare = COORD_TO_SQUARE(nextCoord);
 
         if (WITHIN_BOUNDS(nextCoord)) {
-            if (board.position[nextSquare].type == EMPTY) {
+            if (board.position[nextSquare].type == PieceType::EMPTY) {
                 moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0);
                 //LOG("Empty " << nextSquare);
                 lastCoord = nextCoord;

@@ -2,25 +2,26 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <unordered_map>
 
 #define LOG(x) std::cout << x << std::endl
 
 // constants
-enum sides {
+enum class Side {
     WHITE = 0, BLACK = 1
 };
 
-enum pieceTypes {
+enum class PieceType {
     EMPTY, KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN
 };
 
 // types
 struct Piece {
-    unsigned short type : 3;
-    unsigned short side : 1;
+    PieceType type;
+    Side side;
 };
 
-const Piece EMPTY_SQUARE = {EMPTY, WHITE};
+const Piece EMPTY_SQUARE = {PieceType::EMPTY, Side::WHITE};
 
 class Move {
     /* see https://www.chessprogramming.org/Encoding_Moves */
@@ -68,22 +69,22 @@ class Board {
 public:
     std::array<Piece, 64> position;
 
-    bool castlingRights[2];
+    std::unordered_map<Side, bool> castlingRights;
     bool enPassantPossible;
-    unsigned short sideToPlay : 1;
+    Side sideToPlay = Side::WHITE;
 
     Board() {
-        castlingRights[WHITE] = true; castlingRights[BLACK] = true;
+        castlingRights[Side::WHITE] = true; castlingRights[Side::BLACK] = true;
         enPassantPossible = false;
-        sideToPlay = WHITE;
+        sideToPlay = Side::WHITE;
         std::cout << "Board constructed" << std::endl;
     }
 
-    Board(std::array<Piece, 64>& position, bool whiteCanCastle, bool blackCanCastle, bool enPassantPossible, unsigned short sideToPlay)
+    Board(std::array<Piece, 64>& position, bool whiteCanCastle, bool blackCanCastle, bool enPassantPossible, Side sideToPlay)
         : position(position), enPassantPossible(enPassantPossible), sideToPlay(sideToPlay)
     {
-        castlingRights[WHITE] = whiteCanCastle;
-        castlingRights[BLACK] = blackCanCastle;
+        castlingRights[Side::WHITE] = whiteCanCastle;
+        castlingRights[Side::BLACK] = blackCanCastle;
     }
 
     void makeMove(const Move& move) {
@@ -96,17 +97,17 @@ public:
 
         if (move.promotion) {
             if (move.special1 && move.special0) { // queen-promotion
-                position[move.after].type = QUEEN;
+                position[move.after].type = PieceType::QUEEN;
             } else if (move.special1 && !move.special0) { // rook-promotion
-                position[move.after].type = ROOK;
+                position[move.after].type = PieceType::ROOK;
             } else if (!move.special1 && move.special0) { // bishop-promotion
-                position[move.after].type = BISHOP;
+                position[move.after].type = PieceType::BISHOP;
             } else { // knight-promotion
-                position[move.after].type = KNIGHT;
+                position[move.after].type = PieceType::KNIGHT;
             }
         } else if (move.capture) {
             if (move.special0) { // en passant
-                if (piece.side == WHITE) {
+                if (piece.side == Side::WHITE) {
                     position[move.after-8] = EMPTY_SQUARE;
                 } else {
                     position[move.after+8] = EMPTY_SQUARE;
@@ -116,15 +117,15 @@ public:
             if (!move.special1 && move.special0) { // double pawn push
                 enPassantPossible = true;
             } else if (move.special1 && !move.special0) { // king-side castle
-                position[move.after-1] = {ROOK, piece.side};
+                position[move.after-1] = {PieceType::ROOK, piece.side};
                 position[move.after+1] = EMPTY_SQUARE;
             } else if (move.special1 && move.special0) { // queen-side castle
-                position[move.after+1] = {ROOK, piece.side};
+                position[move.after+1] = {PieceType::ROOK, piece.side};
                 position[move.after-2] = EMPTY_SQUARE;
             } 
         }
 
-        if (piece.type == KING || piece.type == ROOK) {
+        if (piece.type == PieceType::KING || piece.type == PieceType::ROOK) {
             castlingRights[piece.side] = false;
         }
     }
@@ -135,25 +136,25 @@ public:
             position[i] = EMPTY_SQUARE;
         }
 
-        position[0] = {ROOK, WHITE};    position[7] = {ROOK, WHITE};
-        position[1] = {KNIGHT, WHITE};  position[6] = {KNIGHT, WHITE};
-        position[2] = {BISHOP, WHITE};  position[5] = {BISHOP, WHITE};
-        position[3] = {QUEEN, WHITE};   position[28] = {KING, WHITE};
+        position[0] = {PieceType::ROOK, Side::WHITE};    position[7] = {PieceType::ROOK, Side::WHITE};
+        position[1] = {PieceType::KNIGHT, Side::WHITE};  position[6] = {PieceType::KNIGHT, Side::WHITE};
+        position[2] = {PieceType::BISHOP, Side::WHITE};  position[5] = {PieceType::BISHOP, Side::WHITE};
+        position[3] = {PieceType::QUEEN, Side::WHITE};   position[28] = {PieceType::KING, Side::WHITE};
 
-        position[56] = {ROOK, BLACK};   position[63] = {ROOK, BLACK};
-        position[57] = {KNIGHT, BLACK}; position[62] = {KNIGHT, BLACK};
-        position[58] = {BISHOP, BLACK}; position[61] = {BISHOP, BLACK};
-        position[59] = {QUEEN, BLACK};  position[60] = {KING, BLACK};
+        position[56] = {PieceType::ROOK, Side::BLACK};   position[63] = {PieceType::ROOK, Side::BLACK};
+        position[57] = {PieceType::KNIGHT, Side::BLACK}; position[62] = {PieceType::KNIGHT, Side::BLACK};
+        position[58] = {PieceType::BISHOP, Side::BLACK}; position[61] = {PieceType::BISHOP, Side::BLACK};
+        position[59] = {PieceType::QUEEN, Side::BLACK};  position[60] = {PieceType::KING, Side::BLACK};
         /*
         for (int i = 0; i < 8; i++) {
             position[i+8]   = {PAWN, WHITE};
             position[i+48]  = {PAWN, WHITE};
         }
         */
-       castlingRights[0] = true;
-       castlingRights[1] = true;
+       castlingRights[Side::WHITE] = true;
+       castlingRights[Side::BLACK] = true;
        enPassantPossible = true;
-       sideToPlay = WHITE;
+       sideToPlay = Side::WHITE;
     }
 };
 
