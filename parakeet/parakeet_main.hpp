@@ -26,12 +26,14 @@ const Piece EMPTY_SQUARE = {PieceType::EMPTY, Side::WHITE};
 class Move {
     /* see https://www.chessprogramming.org/Encoding_Moves */
 public:
-    unsigned short before : 6;
-    unsigned short after : 6;     // if before and after are both 0, there was no previous move (e.g. beginning of the game)
+    
     unsigned short promotion : 1;
     unsigned short capture : 1;
     unsigned short special1 : 1;
     unsigned short special0 : 1;
+
+    unsigned short before : 6;
+    unsigned short after : 6;     // if before and after are both 0, there was no previous move (e.g. beginning of the game)
 
     Move() {
         before      = 0;
