@@ -3,6 +3,8 @@
 #include <vector>
 #include <array>
 
+#define LOG(x) std::cout << x << std::endl
+
 // constants
 enum sides {
     WHITE = 0, BLACK = 1
@@ -65,7 +67,6 @@ public:
 class Board {
 public:
     std::array<Piece, 64> position;
-    Move lastMove;
 
     bool castlingRights[2];
     bool enPassantPossible;
@@ -129,24 +130,30 @@ public:
     }
 
     void reset() {
+
+        for (int i = 0; i < 64; i++) {
+            position[i] = EMPTY_SQUARE;
+        }
+
         position[0] = {ROOK, WHITE};    position[7] = {ROOK, WHITE};
         position[1] = {KNIGHT, WHITE};  position[6] = {KNIGHT, WHITE};
         position[2] = {BISHOP, WHITE};  position[5] = {BISHOP, WHITE};
-        position[3] = {QUEEN, WHITE};   position[4] = {KING, WHITE};
+        position[3] = {QUEEN, WHITE};   position[28] = {KING, WHITE};
 
         position[56] = {ROOK, BLACK};   position[63] = {ROOK, BLACK};
         position[57] = {KNIGHT, BLACK}; position[62] = {KNIGHT, BLACK};
         position[58] = {BISHOP, BLACK}; position[61] = {BISHOP, BLACK};
         position[59] = {QUEEN, BLACK};  position[60] = {KING, BLACK};
-
+        /*
         for (int i = 0; i < 8; i++) {
             position[i+8]   = {PAWN, WHITE};
             position[i+48]  = {PAWN, WHITE};
         }
-
-        for (int i = 16; i < 56; i++) {
-            position[i] = EMPTY_SQUARE;
-        }
+        */
+       castlingRights[0] = true;
+       castlingRights[1] = true;
+       enPassantPossible = true;
+       sideToPlay = WHITE;
     }
 };
 

@@ -4,5 +4,5 @@
 
 int main() {
     Board board;
-    std::cout << generateMoves(0, board)[0].after << std::endl; // <-- TEST LINE!
+    board.reset();
 }

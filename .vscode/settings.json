@@ -4,6 +4,7 @@
         "iostream": "cpp",
         "bitset": "cpp",
         "array": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "functional": "cpp"
     }
 }
