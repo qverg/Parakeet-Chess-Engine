@@ -1,31 +1,52 @@
 #include "parakeet_main.hpp"
 #include <functional>
 
-#define WITHIN_BOUNDS(x) x[0] >= 0 && x[0] < 8 && x[1] >= 0 && x[1] < 8
-#define COORD_TO_SQUARE(x) x[1] * 8 + x[0]
+#define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
+#define COORD_TO_SQUARE(c)  c.y * 8 + c.x
 
-using Coordinate = std::array<int, 2>;
+struct Coordinate {
+    int x; int y;
+};
 
-static void generateMovesInDirection(const Coordinate coord, const Board& board, const std::function<Coordinate(Coordinate)>& directionFunc,
-                                std::vector<Move>& moves, const Side playingAs, const Side opponent) {
+namespace dirs {
+    static Coordinate north(Coordinate c)       { return {c.x, c.y+1}; }
+    static Coordinate south(Coordinate c)       { return {c.x, c.y+1}; }
+    static Coordinate east(Coordinate c)        { return {c.x, c.y+1}; }
+    static Coordinate west(Coordinate c)        { return {c.x, c.y+1}; }
+    static Coordinate northeast(Coordinate c)   { return {c.x, c.y+1}; }
+    static Coordinate southeast(Coordinate c)   { return {c.x, c.y+1}; }
+    static Coordinate northwest(Coordinate c)   { return {c.x, c.y+1}; }
+    static Coordinate southwest(Coordinate c)   { return {c.x, c.y+1}; }
+}
+
+static void generateMovesInDirection(
+        // probably make this argument list better somehow.
+        // I'd like it to be efficient (i.e. not calculate coord every time) but also concise (not too many).
+        // The whole board isn't necessary - maybe just pass the position array?
+        // The ONLY reason I'm using coords at all is for the WITHIN_BOUNDS check
+        // There's probably some clever better way of implementing this function.
+        const Coordinate coord,
+        const Board& board,
+        const std::function<Coordinate(Coordinate)>& directionFunc,
+        std::vector<Move>& moves,
+        const Side playingAs,
+        const Side opponent
+    ) {
     unsigned short nextSquare;
     Coordinate nextCoord;
     Coordinate lastCoord = coord;
 
     for (int i = 1; i < 8; i++) {
         nextCoord = directionFunc(lastCoord);
-        //LOG(nextCoord[0] << ", " << nextCoord[1]);
-
         nextSquare = COORD_TO_SQUARE(nextCoord);
 
         if (WITHIN_BOUNDS(nextCoord)) {
+
             if (board.position[nextSquare].type == PieceType::EMPTY) {
                 moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0);
-                //LOG("Empty " << nextSquare);
                 lastCoord = nextCoord;
             } else if (board.position[nextSquare].side == opponent) { // capture
                 moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 1, 0, 0);
-                //LOG("Captured " << nextSquare);
                 break;
             } else break;
 
@@ -33,16 +54,6 @@ static void generateMovesInDirection(const Coordinate coord, const Board& board,
     }
 }
 
-namespace dirs {
-    static Coordinate north(Coordinate c)   { return {c[0], c[1]+1}; }
-    static Coordinate south(Coordinate c)   { return {c[0], c[1]+1}; }
-    static Coordinate east(Coordinate c)    { return {c[0], c[1]+1}; }
-    static Coordinate west(Coordinate c)    { return {c[0], c[1]+1}; }
-    static Coordinate northeast(Coordinate c) { return {c[0], c[1]+1}; }
-    static Coordinate southeast(Coordinate c) { return {c[0], c[1]+1}; }
-    static Coordinate northwest(Coordinate c) { return {c[0], c[1]+1}; }
-    static Coordinate southwest(Coordinate c) { return {c[0], c[1]+1}; }
-}
 
 std::vector<Move> generateMoves(const unsigned short square, Board& board) {
     std::vector<Move> moves;
@@ -65,10 +76,11 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
     switch(piece.type) {
         case PieceType::EMPTY:
             break;
+
         case PieceType::KING: {
             // king moves
             std::array<Coordinate, 8> candidates = { {
-                dirs::north(c), dirs::south(c), dirs::east(c), dirs::west(c),
+                dirs::north(c),     dirs::south(c),     dirs::east(c),      dirs::west(c),
                 dirs::northeast(c), dirs::southeast(c), dirs::northwest(c), dirs::southwest(c)
             } };
 
@@ -98,16 +110,17 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
             // queen moves
             // write function for casting ray in certain direction
             Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
-            generateMovesInDirection(c, board, dirs::north, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::south, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::east, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::west, moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::north,     moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::south,     moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::east,      moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::west,      moves, piece.side, opponent);
 
             generateMovesInDirection(c, board, dirs::northeast, moves, piece.side, opponent);
             generateMovesInDirection(c, board, dirs::southeast, moves, piece.side, opponent);
             generateMovesInDirection(c, board, dirs::northwest, moves, piece.side, opponent);
             generateMovesInDirection(c, board, dirs::southwest, moves, piece.side, opponent);
         } break;
+
         case PieceType::BISHOP: {
             // bishop moves
             Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
@@ -118,15 +131,16 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
         } break;
         case PieceType::KNIGHT: {
             // knight moves
-
+            
         } break;
+
         case PieceType::ROOK: {
             // rook moves
             Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
-            generateMovesInDirection(c, board, dirs::north, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::south, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::east, moves, piece.side, opponent);
-            generateMovesInDirection(c, board, dirs::west, moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::north,     moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::south,     moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::east,      moves, piece.side, opponent);
+            generateMovesInDirection(c, board, dirs::west,      moves, piece.side, opponent);
         } break;
         case PieceType::PAWN: {
             // pawn moves
