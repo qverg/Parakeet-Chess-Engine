@@ -70,10 +70,13 @@ public:
 class Board {
 public:
     std::array<Piece, 64> position;
+    Side sideToPlay = Side::WHITE;
 
     std::unordered_map<Side, bool> castlingRights;
+
     bool enPassantPossible;
-    Side sideToPlay = Side::WHITE;
+    unsigned short lastDoublePawnPush = 64; // 64 when there was no last double pawn push
+    
 
     Board() {
         castlingRights[Side::WHITE] = true; castlingRights[Side::BLACK] = true;
@@ -118,6 +121,7 @@ public:
         } else {
             if (!move.special1 && move.special0) { // double pawn push
                 enPassantPossible = true;
+                lastDoublePawnPush = move.after;
             } else if (move.special1 && !move.special0) { // king-side castle
                 position[move.after-1] = {PieceType::ROOK, piece.side};
                 position[move.after+1] = EMPTY_SQUARE;

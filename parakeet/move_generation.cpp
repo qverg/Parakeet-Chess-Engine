@@ -129,7 +129,7 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
             generateMovesInDirection(c, board, dirs::northwest, moves, piece.side, opponent);
             generateMovesInDirection(c, board, dirs::southwest, moves, piece.side, opponent);
         } break;
-        
+
         case PieceType::KNIGHT: {
             // knight moves
             std::array<Coordinate, 8> candidates = {
@@ -165,11 +165,79 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
         } break;
         case PieceType::PAWN: {
             // pawn moves
-            // remember to mark promotions and double pawn pushes!
+            
+            short forwardOffset;
+
+            // min and max are exclusive!
+            bool squareBeforeLastTwoRanks;
+            unsigned short homeRank;
+            unsigned short enPassantRank;
+
+            Side opponent;
+            
+            if (piece.side == Side::WHITE) {
+                forwardOffset = 8;
+                squareBeforeLastTwoRanks = (square < 48);
+                homeRank = 1;
+                enPassantRank = 4;
+                opponent = Side::BLACK;
+            } else {
+                forwardOffset = -8;
+                squareBeforeLastTwoRanks = (square > 15);
+                homeRank = 6;
+                enPassantRank = 3;
+                opponent = Side::WHITE;
+            }
+
+            if (board.position[square+forwardOffset].type == PieceType::EMPTY) {
+                if (squareBeforeLastTwoRanks) {
+                    moves.emplace_back(square, square+forwardOffset);
+                    if (square / 8 == homeRank && board.position[square+forwardOffset*2].type == PieceType::EMPTY) {
+                        moves.emplace_back(square, square+forwardOffset*2, 0, 0, 0, 1);  // double pawn push
+                    }
+                } else {
+                    // promotions
+                    moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 1);   // queen
+                    moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 0);   // rook
+                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 1);   // bishop
+                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 0);   // knight
+                }
+            }
+            // captures
+            if (square+forwardOffset+1 < 64 && board.position[square+forwardOffset+1].side == opponent) {
+                if (squareBeforeLastTwoRanks) {
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);
+                } else {
+                    // promo captures - right
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 1);   // queen
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 0);   // rook
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 1);   // bishop
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);   // knight
+                }
+            }
+            if (square + forwardOffset-1 >= 0 && board.position[square+forwardOffset-1].side == opponent) {
+                if (squareBeforeLastTwoRanks) {
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0);
+                } else {
+                    // promo captures - left
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 1);   // queen
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 0);   // rook
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 1);   // bishop
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0);   // knight
+                }
+            }
+
+            // en passant capture
+            if (board.enPassantPossible && square/8 == enPassantRank) {
+                if (board.lastDoublePawnPush == square+1)
+                    moves.emplace_back(square, square+forwardOffset+1, 0, 1, 0, 1);
+                
+                else if (board.lastDoublePawnPush == square-1)
+                    moves.emplace_back(square, square+forwardOffset-1, 0, 1, 0, 1);
+            }
 
         } break;
     }
 
     return moves;
 }
-
