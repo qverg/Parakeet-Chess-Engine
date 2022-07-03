@@ -127,7 +127,7 @@ public:
             } 
         }
 
-        if (piece.type == PieceType::KING || piece.type == PieceType::ROOK) {
+        if (piece.type == PieceType::KING || move.before == 0 || move.before == 7) {
             castlingRights[piece.side] = false;
         }
     }

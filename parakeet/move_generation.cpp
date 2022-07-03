@@ -79,10 +79,10 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
 
         case PieceType::KING: {
             // king moves
-            std::array<Coordinate, 8> candidates = { {
+            std::array<Coordinate, 8> candidates = {
                 dirs::north(c),     dirs::south(c),     dirs::east(c),      dirs::west(c),
                 dirs::northeast(c), dirs::southeast(c), dirs::northwest(c), dirs::southwest(c)
-            } };
+            };
 
             for (Coordinate& candidate : candidates) {
                 unsigned short newSquare = COORD_TO_SQUARE(candidate);
@@ -129,9 +129,30 @@ std::vector<Move> generateMoves(const unsigned short square, Board& board) {
             generateMovesInDirection(c, board, dirs::northwest, moves, piece.side, opponent);
             generateMovesInDirection(c, board, dirs::southwest, moves, piece.side, opponent);
         } break;
+        
         case PieceType::KNIGHT: {
             // knight moves
-            
+            std::array<Coordinate, 8> candidates = {
+                dirs::north(dirs::north(dirs::east(c))),
+                dirs::north(dirs::north(dirs::west(c))),
+                dirs::north(dirs::east(dirs::east(c))),
+                dirs::north(dirs::west(dirs::west(c))),
+                dirs::south(dirs::south(dirs::east(c))),
+                dirs::south(dirs::south(dirs::west(c))),
+                dirs::south(dirs::east(dirs::east(c))),
+                dirs::south(dirs::west(dirs::west(c)))
+            };
+
+            for (Coordinate& candidate : candidates) {
+                unsigned short newSquare = COORD_TO_SQUARE(candidate);
+                if (WITHIN_BOUNDS(candidate)) {
+                    if (board.position[newSquare].type == PieceType::EMPTY) {
+                        moves.emplace_back(square, newSquare);
+                    } else if (board.position[newSquare].side == Side::BLACK) {
+                        moves.emplace_back(square, newSquare, 1);
+                    }
+                }
+            }
         } break;
 
         case PieceType::ROOK: {
