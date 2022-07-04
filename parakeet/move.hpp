@@ -1,3 +1,4 @@
+
 class Move {
     /* see https://www.chessprogramming.org/Encoding_Moves */
 public:
@@ -16,4 +17,5 @@ public:
     Move(unsigned short before, unsigned short after);
 
     bool legal();
+
 };

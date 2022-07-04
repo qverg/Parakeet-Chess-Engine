@@ -2,7 +2,9 @@
 
 #include <iostream>
 #include <string>
-#include "parakeet_main.hpp"
+#include <vector>
+
+#include "types.hpp"
 #include "log.hpp"
 #include "board.hpp"
 
@@ -120,7 +122,7 @@ void run() {
                     board.generateMoves(origin, moves);
 
                     for (Move& move : moves) {
-                        std::cout << move.after << " ";
+                        std::cout << board.algebraic(move) << " ";
                     }
                     std::cout << std::endl;
                 }

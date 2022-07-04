@@ -4,17 +4,22 @@
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
 
 Board::Board() {
-    castlingRights[Side::WHITE] = true; castlingRights[Side::BLACK] = true;
+    castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
+    castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
     enPassantPossible = false;
     sideToPlay = Side::WHITE;
     lastDoublePawnPush = 64;
 }
 
-Board::Board(std::array<Piece, 64>& position, Side sideToPlay, bool whiteCanCastle, bool blackCanCastle, bool enPassantPossible, unsigned short lastDoublePawnPush)
+Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
+    bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
+    bool enPassantPossible, unsigned short lastDoublePawnPush)
     : position(position), sideToPlay(sideToPlay), enPassantPossible(enPassantPossible), lastDoublePawnPush(lastDoublePawnPush)
 {
-    castlingRights[Side::WHITE] = whiteCanCastle;
-    castlingRights[Side::BLACK] = blackCanCastle;
+    castlingRightsKingSide[Side::WHITE] = whiteCanCastleKingSide;
+    castlingRightsKingSide[Side::BLACK] = blackCanCastleKingSide;
+    castlingRightsQueenSide[Side::WHITE] = whiteCanCastleQueenSide;
+    castlingRightsQueenSide[Side::BLACK] = blackCanCastleQueenSide;
 }
 
 void Board::makeMove(const Move& move) {
@@ -42,7 +47,7 @@ void Board::makeMove(const Move& move) {
             } else {
                 position[move.after+8] = EMPTY_SQUARE;
             }
-        } 
+        }
     } else {
         if (!move.special1 && move.special0) { // double pawn push
             enPassantPossible = true;
@@ -53,12 +58,30 @@ void Board::makeMove(const Move& move) {
         } else if (move.special1 && move.special0) { // queen-side castle
             position[move.after+1] = {PieceType::ROOK, piece.side};
             position[move.after-2] = EMPTY_SQUARE;
-        } 
+        }
     }
 
-    if (piece.type == PieceType::KING || move.before == 0 || move.before == 7) {
-        castlingRights[piece.side] = false;
+    // castling rights
+    if (piece.type == PieceType::KING) {
+        castlingRightsKingSide[piece.side] = false;
+        castlingRightsQueenSide[piece.side] = false;
     }
+
+    if (piece.side == Side::WHITE) {
+        if (move.before == 0) castlingRightsQueenSide[Side::WHITE] == false;
+        else if (move.before == 0) castlingRightsKingSide[Side::WHITE] == false;
+
+        if (move.after == 56) castlingRightsQueenSide[Side::BLACK] == false;
+        else if (move.after == 63) castlingRightsKingSide[Side::BLACK] == false;
+
+    } else {
+        if (move.before == 56) castlingRightsQueenSide[Side::BLACK] == false;
+        else if (move.before == 63) castlingRightsKingSide[Side::BLACK] == false;
+
+        if (move.after == 0) castlingRightsQueenSide[Side::WHITE] == false;
+        else if (move.after == 0) castlingRightsKingSide[Side::WHITE] == false;
+    }
+
 }
 
 void Board::reset() {
@@ -70,7 +93,7 @@ void Board::reset() {
     position[0] = {PieceType::ROOK, Side::WHITE};    position[7] = {PieceType::ROOK, Side::WHITE};
     position[1] = {PieceType::KNIGHT, Side::WHITE};  position[6] = {PieceType::KNIGHT, Side::WHITE};
     position[2] = {PieceType::BISHOP, Side::WHITE};  position[5] = {PieceType::BISHOP, Side::WHITE};
-    position[3] = {PieceType::QUEEN, Side::WHITE};   position[28] = {PieceType::KING, Side::WHITE};
+    position[3] = {PieceType::QUEEN, Side::WHITE};   position[4] = {PieceType::KING, Side::WHITE};
 
     position[56] = {PieceType::ROOK, Side::BLACK};   position[63] = {PieceType::ROOK, Side::BLACK};
     position[57] = {PieceType::KNIGHT, Side::BLACK}; position[62] = {PieceType::KNIGHT, Side::BLACK};
@@ -82,8 +105,8 @@ void Board::reset() {
         position[i+48]  = {PAWN, WHITE};
     }
     */
-    castlingRights[Side::WHITE] = true;
-    castlingRights[Side::BLACK] = true;
+    castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
+    castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
     enPassantPossible = false;
     lastDoublePawnPush = 64;
     sideToPlay = Side::WHITE;
@@ -93,7 +116,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
     Log(LogLevel::DEBUG, "Generating moves");
 
     Piece piece = position[square];
-    
+
     /*  // maybe use macros instead of functions for performance?
         // doesn't really matter because for bishop/rook/queen I'm using lambdas of these anyway
     #define NORTH(x) {x[0], x[1]+1}
@@ -130,15 +153,18 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 }
             }
 
-            if (castlingRights[piece.side]) {
-                if (position[square+1].type == PieceType::EMPTY && position[square+2].type == PieceType::EMPTY) {
-                    moves.emplace_back(square, square+2, 0, 0, 1, 0); // king-side castle
-                }
-                if (position[square-1].type == PieceType::EMPTY && position[square-2].type == PieceType::EMPTY 
-                    && position[square-3].type == PieceType::EMPTY) {
-                    moves.emplace_back(square, square-2, 0, 0, 1, 1); // queen-side castle
-                }
+            if (castlingRightsKingSide[piece.side] 
+                && position[square+1].type == PieceType::EMPTY
+                && position[square+2].type == PieceType::EMPTY) {
+                moves.emplace_back(square, square+2, 0, 0, 1, 0); // king-side castle
             }
+            if (castlingRightsQueenSide[piece.side] 
+                && position[square-1].type == PieceType::EMPTY
+                && position[square-2].type == PieceType::EMPTY
+                && position[square-3].type == PieceType::EMPTY) {
+                moves.emplace_back(square, square-2, 0, 0, 1, 1); // queen-side castle
+            }
+
         } break;
 
         case PieceType::QUEEN: {
@@ -193,15 +219,15 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
         case PieceType::ROOK: {
             // rook moves
             Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
-            generateMovesInDirection(c, dirs::north,     moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::south,     moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::east,      moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::west,      moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::north,    moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::south,    moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::east,     moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::west,     moves, piece.side, opponent);
         } break;
         case PieceType::PAWN: {
             // pawn moves
             Log(LogLevel::DEBUG, "Piece type: pawn");
-            
+
             short forwardOffset;
 
             // min and max are exclusive!
@@ -210,7 +236,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             unsigned short enPassantRank;
 
             Side opponent;
-            
+
             if (piece.side == Side::WHITE) {
                 forwardOffset = 8;
                 squareBeforeLastTwoRanks = (square < 48);
@@ -267,7 +293,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             if (enPassantPossible && square/8 == enPassantRank) {
                 if (lastDoublePawnPush == square+1)
                     moves.emplace_back(square, square+forwardOffset+1, 0, 1, 0, 1);
-                
+
                 else if (lastDoublePawnPush == square-1)
                     moves.emplace_back(square, square+forwardOffset-1, 0, 1, 0, 1);
             }
@@ -281,7 +307,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 void Board::generateMovesInDirection(
         // probably make this argument list better somehow.
         // I'd like it to be efficient (i.e. not calculate coord every time) but also concise (not too many).
-        // The whole board isn't necessary - maybe just pass the position array?
         // The ONLY reason I'm using coords at all is for the WITHIN_BOUNDS check
         // There's probably some clever better way of implementing this function.
         const Coordinate coord,
@@ -289,7 +314,7 @@ void Board::generateMovesInDirection(
         std::vector<Move>& moves,
         const Side playingAs,
         const Side opponent
-    ) {
+    ) const {
     unsigned short nextSquare;
     Coordinate nextCoord;
     Coordinate lastCoord = coord;
@@ -311,3 +336,19 @@ void Board::generateMovesInDirection(
         } else break;
     }
 }
+
+std::string Board::algebraic(Move& move) {
+        std::string out = "";
+        switch (position[move.before].type) {
+            case (PieceType::KING): out += "K"; break;
+            case (PieceType::QUEEN): out += "Q"; break;
+            case (PieceType::BISHOP): out += "B"; break;
+            case (PieceType::KNIGHT): out += "N"; break;
+            case (PieceType::ROOK): out += "R"; break;
+        }
+
+        out += (char) (move.after%8) + 'a';
+        out += std::to_string(move.after/8 + 1);
+
+        return out;
+    }
