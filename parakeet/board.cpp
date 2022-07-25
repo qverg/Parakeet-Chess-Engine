@@ -1,4 +1,5 @@
 #include "board.hpp"
+#include "log.hpp"
 
 #define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
@@ -16,8 +17,8 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     bool enPassantPossible, unsigned short lastDoublePawnPush)
     : position(position), sideToPlay(sideToPlay), enPassantPossible(enPassantPossible), lastDoublePawnPush(lastDoublePawnPush)
 {
-    castlingRightsKingSide[Side::WHITE] = whiteCanCastleKingSide;
-    castlingRightsKingSide[Side::BLACK] = blackCanCastleKingSide;
+    castlingRightsKingSide[Side::WHITE]  = whiteCanCastleKingSide;
+    castlingRightsKingSide[Side::BLACK]  = blackCanCastleKingSide;
     castlingRightsQueenSide[Side::WHITE] = whiteCanCastleQueenSide;
     castlingRightsQueenSide[Side::BLACK] = blackCanCastleQueenSide;
 }
@@ -117,19 +118,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
     Piece piece = position[square];
 
-    /*  // maybe use macros instead of functions for performance?
-        // doesn't really matter because for bishop/rook/queen I'm using lambdas of these anyway
-    #define NORTH(x) {x[0], x[1]+1}
-    #define SOUTH(x) {x[0], x[1]-1}
-    #define EAST(x) {x[0]+1, x[1]}
-    #define WEST(x) {x[0]-1, x[1]}
-    #define NORTHEAST(x) {x[0]+1, x[1]+1}
-    #define SOUTHEAST(x) {x[0]+1, x[1]-1}
-    #define NORTHWEST(x) {x[0]-1, x[1]+1}
-    #define SOUTHWEST(x) {x[0]-1, x[1]-1}
-    */
-
-    Coordinate c = {square % 8, square / 8};
+    Coordinate c = {square & 7, square >> 8};
 
     switch(piece.type) {
         case PieceType::EMPTY:
@@ -300,6 +289,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         } break;
     }
+    
     Log(LogLevel::DEBUG, "Move generation done");
 }
 
@@ -337,14 +327,14 @@ void Board::generateMovesInDirection(
     }
 }
 
-std::string Board::algebraic(Move& move) {
+std::string Board::algebraic(const Move& move) {
         std::string out = "";
         switch (position[move.before].type) {
-            case (PieceType::KING): out += "K"; break;
-            case (PieceType::QUEEN): out += "Q"; break;
-            case (PieceType::BISHOP): out += "B"; break;
-            case (PieceType::KNIGHT): out += "N"; break;
-            case (PieceType::ROOK): out += "R"; break;
+            case (PieceType::KING):     out += "K"; break;
+            case (PieceType::QUEEN):    out += "Q"; break;
+            case (PieceType::BISHOP):   out += "B"; break;
+            case (PieceType::KNIGHT):   out += "N"; break;
+            case (PieceType::ROOK):     out += "R"; break;
         }
 
         out += (char) (move.after%8) + 'a';

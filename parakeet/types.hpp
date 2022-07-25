@@ -1,7 +1,5 @@
 #pragma once
 
-#include "log.hpp"
-
 // constants
 enum class Side {
     WHITE = 0, BLACK = 1
