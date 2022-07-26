@@ -3,7 +3,7 @@
 #include "log.hpp"
 
 void Log(LogLevel level, std::string msg) {
-    if (level >= LOG_LEVEL) {
+    if (level <= LOG_LEVEL) {
         switch (level) {
             case (LogLevel::ERROR): {
                 std::cerr << "$ERROR: " << msg << std::endl;

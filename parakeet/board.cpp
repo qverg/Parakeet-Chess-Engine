@@ -12,6 +12,7 @@ Board::Board() {
     lastDoublePawnPush = 64;
 }
 
+// inefficient!! only use when time is unimportant
 Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
     bool enPassantPossible, unsigned short lastDoublePawnPush)
@@ -21,6 +22,10 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     castlingRightsKingSide[Side::BLACK]  = blackCanCastleKingSide;
     castlingRightsQueenSide[Side::WHITE] = whiteCanCastleQueenSide;
     castlingRightsQueenSide[Side::BLACK] = blackCanCastleQueenSide;
+
+    for (int i = 0; i < 64; i++) {
+        if (position[i].type == PieceType::KING) kingPositions[position[i].side] = i;
+    }
 }
 
 void Board::makeMove(const Move& move) {
@@ -66,6 +71,7 @@ void Board::makeMove(const Move& move) {
     if (piece.type == PieceType::KING) {
         castlingRightsKingSide[piece.side] = false;
         castlingRightsQueenSide[piece.side] = false;
+        kingPositions[piece.side] = move.after;
     }
 
     if (piece.side == Side::WHITE) {
@@ -289,7 +295,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         } break;
     }
-    
+
     Log(LogLevel::DEBUG, "Move generation done");
 }
 

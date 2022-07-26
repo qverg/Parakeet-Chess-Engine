@@ -3,14 +3,150 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <cctype>
 
 #include "types.hpp"
 #include "log.hpp"
 #include "board.hpp"
 
-void generateMoves(const unsigned short square, const Board& board, std::vector<Move>& moves);
+static std::vector<std::string> split(std::string& text, const char& delimiter) {
+    std::vector<std::string> words;
 
-void run() {
+    std::string current_word = "";
+    for (const char& c : text) {
+        if (c == delimiter) {
+            if (current_word != "") {
+                words.push_back(current_word);
+                current_word = "";
+            }
+        } else {
+            current_word += c;
+        }
+    }
+
+    if (current_word != "") {
+        words.push_back(current_word);
+        current_word = "";
+    }
+
+    return words;
+}
+
+static void logFENPosition(std::array<Piece, 64>& position) {
+
+    std::string out = "\n";
+    for (int i = 56; i >= 0; i++) {
+        if (position[i].side == Side::WHITE) {
+            if (position[i].type == PieceType::PAWN) out += "P";
+            else if (position[i].type == PieceType::ROOK) out += "R";
+            else if (position[i].type == PieceType::KNIGHT) out += "N";
+            else if (position[i].type == PieceType::BISHOP) out += "B";
+            else if (position[i].type == PieceType::QUEEN) out += "Q";
+            else if (position[i].type == PieceType::KING) out += "K";
+            else if (position[i].type == PieceType::EMPTY) out += ".";
+        } else {
+            if (position[i].type == PieceType::PAWN) out += "p";
+            else if (position[i].type == PieceType::ROOK) out += "r";
+            else if (position[i].type == PieceType::KNIGHT) out += "n";
+            else if (position[i].type == PieceType::BISHOP) out += "b";
+            else if (position[i].type == PieceType::QUEEN) out += "q";
+            else if (position[i].type == PieceType::KING) out += "k";
+        }
+
+        if ((i+1)%8 == 0) {
+            out += "\n";
+            i -= 16;
+        }
+    }
+
+    Log(LogLevel::DEBUG, out);
+}
+
+static void loadFEN(std::string fen) {
+    std::unordered_map<char, Piece> pieceRef;
+    pieceRef['p'] = {PieceType::PAWN,   Side::BLACK};
+    pieceRef['r'] = {PieceType::ROOK,   Side::BLACK};
+    pieceRef['n'] = {PieceType::KNIGHT, Side::BLACK};
+    pieceRef['b'] = {PieceType::BISHOP, Side::BLACK};
+    pieceRef['q'] = {PieceType::QUEEN,  Side::BLACK};
+    pieceRef['k'] = {PieceType::KING,   Side::BLACK};
+    pieceRef['R'] = {PieceType::ROOK,   Side::WHITE};
+    pieceRef['P'] = {PieceType::PAWN,   Side::WHITE};
+    pieceRef['N'] = {PieceType::KNIGHT, Side::WHITE};
+    pieceRef['B'] = {PieceType::BISHOP, Side::WHITE};
+    pieceRef['Q'] = {PieceType::QUEEN,  Side::WHITE};
+    pieceRef['K'] = {PieceType::KING,   Side::WHITE};
+
+    // 0 = piece placement
+    // 1 = active colour
+    // 2 = castling rights
+    // 3 = possible en passant targets
+    // 4 = halfmove clock
+    // 5 = fullmove number
+    // (separated by spaces)
+
+    std::array<Piece, 64> position;
+    for (int i = 0; i < 64; i++) {
+        position[i] = EMPTY_SQUARE;
+    }
+
+    std::vector<std::string> info = split(fen, ' ');
+    
+
+    // Piece placement
+    std::vector<std::string> piece_placement = split(info[0], '/');
+
+    for (int rank = 7; rank >= 0; rank--) {
+        int file = 0;
+        for (const char& c : piece_placement[7-rank]) {
+            if (isdigit(c)) file += c-'0';
+            else {
+                position[rank*8 + file] = pieceRef[c];
+                file++;
+            }
+        }
+    }
+    Log(LogLevel::DEBUG, "Generated FEN Position:");
+    logFENPosition(position);
+
+    // Active colour
+    if (info[1] == "w") {
+        Side active_colour = Side::WHITE;
+        Log(LogLevel::INFO, "Active colour white");
+    } else {
+        Side active_colour = Side::BLACK;
+        Log(LogLevel::INFO, "Active colour black");
+    }
+
+    // Castling rights
+    bool whiteCanCastleKingSide = false;
+    bool whiteCanCastleQueenSide = false;
+    bool blackCanCastleKingSide = false;
+    bool blackCanCastleQueenSide = false;
+
+    for (const char& c : info[2]) {
+        if (c == 'K') whiteCanCastleKingSide = true;
+        else if (c == 'Q') whiteCanCastleQueenSide = true;
+        else if (c == 'k') blackCanCastleKingSide = true;
+        else if (c == 'q') blackCanCastleQueenSide = true;
+    }
+
+    // Possible En Passant Targets
+    // https://www.chess.com/terms/fen-chess
+    
+
+    // Halfmove clock
+
+
+    // Fullmove number
+
+
+    // Generate & return board (pointer?)
+
+}
+
+static void run() {
     /* This function communicates with the user to control the engine.
      * All user commands begin with a dollar sign $
      * 
@@ -45,8 +181,8 @@ void run() {
     while (!quit) {
         switch (mode) {
             case BEGIN: {
-                std::cout << "Enter a position or $reset\n> ";
-                std::cin >> in;
+                std::cout << "Enter a FEN or $reset\n> ";
+                getline(std::cin, in);
 
                 if (in == "$reset") {
                     board.reset();
@@ -56,7 +192,7 @@ void run() {
                 } else if (in == "quit") {
                     quit = true;  
                 } else {
-                    std::cout << "Taking positions not yet implemented" << std::endl;
+                    loadFEN(in);
                 }
 
 
@@ -64,7 +200,7 @@ void run() {
             
             case RUNNING: {
                 std::cout << "Enter a move or command\n> ";
-                std::cin >> in;
+                getline(std::cin, in);
 
                 if (in[0] == '$') { // commands
                     if (in == "$reset") {
@@ -83,7 +219,7 @@ void run() {
                     board.generateMoves(before, possibleMoves);
 
                     std::cout << "> ";
-                    std::cin >> in;
+                    getline(std::cin, in);
 
                     unsigned int after = stoi(in);
 
@@ -106,7 +242,7 @@ void run() {
 
             case (TEST_MOVE_GEN): {
                 std::cout << "Enter a square or command\n> ";
-                std::cin >> in;
+                getline(std::cin, in);
 
                 if (in[0] == '$') { // commands
                     if (in == "$reset") {

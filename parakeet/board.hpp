@@ -20,23 +20,27 @@ public:
     bool enPassantPossible;
     unsigned short lastDoublePawnPush; // 64 when there was no last double pawn push
 
+private:
     struct Coordinate {
         int x; int y;
     };
 
     struct dirs {
-        static Coordinate north(Coordinate c)       { return {c.x, c.y+1}; }
-        static Coordinate south(Coordinate c)       { return {c.x, c.y-1}; }
-        static Coordinate east(Coordinate c)        { return {c.x+1, c.y}; }
-        static Coordinate west(Coordinate c)        { return {c.x-1, c.y}; }
-        static Coordinate northeast(Coordinate c)   { return {c.x+1, c.y+1}; }
-        static Coordinate southeast(Coordinate c)   { return {c.x+1, c.y-1}; }
-        static Coordinate northwest(Coordinate c)   { return {c.x-1, c.y+1}; }
-        static Coordinate southwest(Coordinate c)   { return {c.x-1, c.y-1}; }
+        static inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
+        static inline Coordinate north      (Coordinate c)   { return {c.x, c.y+1};   }
+        static inline Coordinate east       (Coordinate c)   { return {c.x+1, c.y};   }
+        static inline Coordinate west       (Coordinate c)   { return {c.x-1, c.y};   }
+        static inline Coordinate northeast  (Coordinate c)   { return {c.x+1, c.y+1}; }
+        static inline Coordinate southeast  (Coordinate c)   { return {c.x+1, c.y-1}; }
+        static inline Coordinate northwest  (Coordinate c)   { return {c.x-1, c.y+1}; }
+        static inline Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
     };
 
+    std::unordered_map<Side, unsigned short> kingPositions;
+
+public:
     Board();
-    Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
+    Board(std::array<Piece, 64>& position, Side sideToPlay,
     bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
     bool enPassantPossible, unsigned short lastDoublePawnPush);
 
@@ -46,7 +50,7 @@ public:
 
     void generateMoves(const unsigned short square, std::vector<Move>& moves);
 
-    std::string algebraic(Move& move);
+    std::string algebraic(const Move& move); // in Board because needs access to position
 
 private:
     void generateMovesInDirection(
@@ -56,4 +60,6 @@ private:
         const Side playingAs,
         const Side opponent
     ) const;
+
+    bool sideInCheck(const Side side) const;
 };

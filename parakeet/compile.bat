@@ -1,1 +1,1 @@
-g++ .\main.cpp .\board.cpp .\log.cpp .\move.cpp -o parakeet
+g++ .\main.cpp .\board.cpp .\log.cpp .\move.cpp .\engine.cpp -o parakeet
