@@ -106,12 +106,12 @@ void Board::reset() {
     position[57] = {PieceType::KNIGHT, Side::BLACK}; position[62] = {PieceType::KNIGHT, Side::BLACK};
     position[58] = {PieceType::BISHOP, Side::BLACK}; position[61] = {PieceType::BISHOP, Side::BLACK};
     position[59] = {PieceType::QUEEN, Side::BLACK};  position[60] = {PieceType::KING, Side::BLACK};
-    /*
+    
     for (int i = 0; i < 8; i++) {
-        position[i+8]   = {PAWN, WHITE};
-        position[i+48]  = {PAWN, WHITE};
+        position[i+8]   = {PieceType::PAWN, Side::WHITE};
+        position[i+48]  = {PieceType::PAWN, Side::BLACK};
     }
-    */
+
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
     enPassantPossible = false;
