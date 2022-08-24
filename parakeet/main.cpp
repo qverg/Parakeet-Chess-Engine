@@ -63,7 +63,7 @@ static void logFENPosition(std::array<Piece, 64>& position) {
     Log(LogLevel::DEBUG, out);
 }
 
-static void loadFEN(std::string fen) {
+void loadFEN(std::string fen, Board& board) {
     std::unordered_map<char, Piece> pieceRef;
     pieceRef['p'] = {PieceType::PAWN,   Side::BLACK};
     pieceRef['r'] = {PieceType::ROOK,   Side::BLACK};
@@ -111,12 +111,13 @@ static void loadFEN(std::string fen) {
     logFENPosition(position);
 
     // Active colour
+    Side active_colour;
     if (info[1] == "w") {
-        Side active_colour = Side::WHITE;
-        Log(LogLevel::INFO, "Active colour white");
+        active_colour = Side::WHITE;
+        Log(LogLevel::INFO, "FEN reader says active colour white");
     } else {
-        Side active_colour = Side::BLACK;
-        Log(LogLevel::INFO, "Active colour black");
+        active_colour = Side::BLACK;
+        Log(LogLevel::INFO, "FEN reader says active colour black");
     }
 
     // Castling rights
@@ -134,7 +135,36 @@ static void loadFEN(std::string fen) {
 
     // Possible En Passant Targets
     // https://www.chess.com/terms/fen-chess
-    
+    bool enPassantPossible = false;
+    unsigned short lastDoublePawnPush = 64;
+
+    if (info[3] != "-") {
+        int possibleEnPassantFile = info[3][0] - 'a';
+
+        int enPassantRank;
+        int offset;
+        if (active_colour == Side::WHITE) {
+            enPassantRank = 4;
+            offset = -1;
+        } else {
+            enPassantRank = 3;
+            offset = 1;
+        }
+
+        lastDoublePawnPush = enPassantRank*8 + possibleEnPassantFile;
+        if (possibleEnPassantFile > 0 && position[lastDoublePawnPush-1].side == active_colour
+                && position[lastDoublePawnPush-1].type == PieceType::PAWN) {
+            enPassantPossible = true;
+            Log(LogLevel::INFO, "FEN reader says en passant possible");
+        }
+
+        if (possibleEnPassantFile < 7 && position[lastDoublePawnPush+1].side == active_colour
+                && position[lastDoublePawnPush+1].type == PieceType::PAWN) {
+            enPassantPossible = true;
+            Log(LogLevel::INFO, "FEN reader says en passant possible");
+        }
+
+    }
 
     // Halfmove clock
 
@@ -143,7 +173,12 @@ static void loadFEN(std::string fen) {
 
 
     // Generate & return board (pointer?)
-
+    board = Board(
+        position, active_colour,
+        whiteCanCastleKingSide, whiteCanCastleQueenSide,
+        blackCanCastleKingSide, blackCanCastleQueenSide,
+        enPassantPossible, lastDoublePawnPush
+    );
 }
 
 static void run() {
@@ -192,7 +227,8 @@ static void run() {
                 } else if (in == "quit") {
                     quit = true;  
                 } else {
-                    loadFEN(in);
+                    loadFEN(in, board);
+                    mode = RUNNING;
                 }
 
 
