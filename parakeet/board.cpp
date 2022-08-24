@@ -123,8 +123,9 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
     Log(LogLevel::DEBUG, "Generating moves");
 
     Piece piece = position[square];
+    Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
-    Coordinate c = {square & 7, square >> 8};
+    Coordinate c = {square % 8, square / 8};
 
     switch(piece.type) {
         case PieceType::EMPTY:
@@ -142,7 +143,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 if (WITHIN_BOUNDS(candidate)) {
                     if (position[newSquare].type == PieceType::EMPTY) {
                         moves.emplace_back(square, newSquare);
-                    } else if (position[newSquare].side == Side::BLACK) {
+                    } else if (position[newSquare].side == opponent) {
                         moves.emplace_back(square, newSquare, 1);
                     }
                 }
@@ -164,8 +165,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::QUEEN: {
             // queen moves
-            // write function for casting ray in certain direction
-            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, dirs::north,     moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::south,     moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::east,      moves, piece.side, opponent);
@@ -179,7 +178,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::BISHOP: {
             // bishop moves
-            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, dirs::northeast, moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::southeast, moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::northwest, moves, piece.side, opponent);
@@ -187,16 +185,17 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
         } break;
 
         case PieceType::KNIGHT: {
+
             // knight moves
             std::array<Coordinate, 8> candidates = {
                 dirs::north(dirs::north(dirs::east(c))),
                 dirs::north(dirs::north(dirs::west(c))),
-                dirs::north(dirs::east(dirs::east(c))),
-                dirs::north(dirs::west(dirs::west(c))),
+                dirs::north(dirs::east (dirs::east(c))),
+                dirs::north(dirs::west (dirs::west(c))),
                 dirs::south(dirs::south(dirs::east(c))),
                 dirs::south(dirs::south(dirs::west(c))),
-                dirs::south(dirs::east(dirs::east(c))),
-                dirs::south(dirs::west(dirs::west(c)))
+                dirs::south(dirs::east (dirs::east(c))),
+                dirs::south(dirs::west (dirs::west(c)))
             };
 
             for (Coordinate& candidate : candidates) {
@@ -204,7 +203,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 if (WITHIN_BOUNDS(candidate)) {
                     if (position[newSquare].type == PieceType::EMPTY) {
                         moves.emplace_back(square, newSquare);
-                    } else if (position[newSquare].side == Side::BLACK) {
+                    } else if (position[newSquare].side == opponent) {
                         moves.emplace_back(square, newSquare, 1);
                     }
                 }
@@ -213,7 +212,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::ROOK: {
             // rook moves
-            Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
             generateMovesInDirection(c, dirs::north,    moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::south,    moves, piece.side, opponent);
             generateMovesInDirection(c, dirs::east,     moves, piece.side, opponent);
@@ -261,7 +259,8 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 }
             }
             // captures
-            if (square+forwardOffset+1 < 64 && position[square+forwardOffset+1].side == opponent) {
+            // right
+            if (c.x < 7 && square+forwardOffset+1 < 64 && position[square+forwardOffset+1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
                     moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);
                 } else {
@@ -272,7 +271,8 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);   // knight
                 }
             }
-            if (square + forwardOffset-1 >= 0 && position[square+forwardOffset-1].side == opponent) {
+            // left
+            if (c.x > 0 && square + forwardOffset-1 >= 0 && position[square+forwardOffset-1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
                     moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0);
                 } else {

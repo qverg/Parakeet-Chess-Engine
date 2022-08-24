@@ -44,7 +44,6 @@ static void logFENPosition(std::array<Piece, 64>& position) {
             else if (position[i].type == PieceType::BISHOP) out += "B";
             else if (position[i].type == PieceType::QUEEN) out += "Q";
             else if (position[i].type == PieceType::KING) out += "K";
-            else if (position[i].type == PieceType::EMPTY) out += ".";
         } else {
             if (position[i].type == PieceType::PAWN) out += "p";
             else if (position[i].type == PieceType::ROOK) out += "r";
@@ -52,7 +51,8 @@ static void logFENPosition(std::array<Piece, 64>& position) {
             else if (position[i].type == PieceType::BISHOP) out += "b";
             else if (position[i].type == PieceType::QUEEN) out += "q";
             else if (position[i].type == PieceType::KING) out += "k";
-        }
+            else if (position[i].type == PieceType::EMPTY) out += ".";
+        } 
 
         if ((i+1)%8 == 0) {
             out += "\n";
@@ -201,6 +201,12 @@ static void run() {
      * 
      */
 
+    /* Commands:
+     * $quit            quit parakeet
+     * $reset           reset board to normal starting position
+     * $testmovegen     test move generation
+     * $exitboard       exit the current board
+     */
     Board board;
 
     enum Mode {
@@ -224,7 +230,7 @@ static void run() {
                     mode = RUNNING;
                 } else if (in == "$testmovegen") {
                     mode = TEST_MOVE_GEN;
-                } else if (in == "quit") {
+                } else if (in == "$quit") {
                     quit = true;  
                 } else {
                     loadFEN(in, board);
@@ -245,6 +251,8 @@ static void run() {
                         quit = true;
                     } else if (in == "$testmovegen") {
                         mode = TEST_MOVE_GEN;
+                    } else if (in == "$exitboard") {
+                        mode = BEGIN;
                     }
                     
                 } else {    // move given
@@ -277,7 +285,7 @@ static void run() {
             } break;
 
             case (TEST_MOVE_GEN): {
-                std::cout << "Enter a square or command\n> ";
+                std::cout << "Enter a square (e.g. e4) or command\n> ";
                 getline(std::cin, in);
 
                 if (in[0] == '$') { // commands
@@ -285,16 +293,20 @@ static void run() {
                         board.reset();
                     } else if (in == "$quit") {
                         quit = true;
-                    } else if (in == "$exit") {
+                    } else if (in == "$exitboard") {
                         mode = BEGIN;
                     }
-                } else {
-                    unsigned int origin = stoi(in);
+                } else {    
+                    unsigned int file = in[0] - 'a';
+                    unsigned int rank = in[1] - '1';
+                    Log(LogLevel::DEBUG, "Generating on the following square:");
+                    std::cout << rank*8+file << std::endl;
+                    
                     std::vector<Move> moves;
-                    board.generateMoves(origin, moves);
-
+                    board.generateMoves(rank*8 + file, moves);
+                    
                     for (Move& move : moves) {
-                        std::cout << board.algebraic(move) << " ";
+                        std::cout << move.after << " " << board.algebraic(move) << " ";
                     }
                     std::cout << std::endl;
                 }

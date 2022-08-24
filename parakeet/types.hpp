@@ -2,7 +2,7 @@
 
 // constants
 enum class Side {
-    WHITE = 0, BLACK = 1
+    WHITE = 0, BLACK = 1, EMPTY
 };
 
 enum class PieceType {
@@ -15,4 +15,4 @@ struct Piece {
     Side side;
 };
 
-const Piece EMPTY_SQUARE = {PieceType::EMPTY, Side::WHITE};
+const Piece EMPTY_SQUARE = {PieceType::EMPTY, Side::EMPTY};
