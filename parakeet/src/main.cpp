@@ -82,13 +82,18 @@ static void run() {
                     std::vector<Move> possibleMoves;
                     board.generateMoves(before, possibleMoves);
 
+                    for (const auto& move : possibleMoves) {
+                        std::cout << move.after << " ";
+                    }
+                    std::cout << std::endl;
+
                     std::cout << "> ";
                     getline(std::cin, in);
 
                     unsigned int after = stoi(in);
 
                     Move queriedMove;
-                    for (Move& move : possibleMoves) {
+                    for (const Move& move : possibleMoves) {
                         if (move.after == after) {
                             queriedMove = move;
                             break;

@@ -29,6 +29,29 @@ def get_square_index_from_coord(coord: tuple):
     else:
         return None
 
+def load_pieces(board_position: list):
+    board_position[get_square_index("e1")] = Piece("K", square_size)
+    board_position[get_square_index("d1")] = Piece("Q", square_size)
+    board_position[get_square_index("f1")] = Piece("B", square_size)
+    board_position[get_square_index("c1")] = Piece("B", square_size)
+    board_position[get_square_index("b1")] = Piece("N", square_size)
+    board_position[get_square_index("g1")] = Piece("N", square_size)
+    board_position[get_square_index("a1")] = Piece("R", square_size)
+    board_position[get_square_index("h1")] = Piece("R", square_size)
+
+    board_position[get_square_index("e8")] = Piece("k", square_size)
+    board_position[get_square_index("d8")] = Piece("q", square_size)
+    board_position[get_square_index("f8")] = Piece("b", square_size)
+    board_position[get_square_index("c8")] = Piece("b", square_size)
+    board_position[get_square_index("b8")] = Piece("n", square_size)
+    board_position[get_square_index("g8")] = Piece("n", square_size)
+    board_position[get_square_index("a8")] = Piece("r", square_size)
+    board_position[get_square_index("h8")] = Piece("r", square_size)
+
+    for i in range(8):
+        board_position[get_square_index("abcdefgh"[i]+"7")] = Piece("p", square_size)
+        board_position[get_square_index("abcdefgh"[i]+"2")] = Piece("P", square_size)
+
 def main():
     pygame.init()
     
@@ -43,34 +66,13 @@ def main():
     board_position = [EmptySquare() for i in range(64)]
 
     # Load pieces
-    board_position[get_square_index("e1")] = Piece("res/white_king.png", square_size)
-    board_position[get_square_index("d1")] = Piece("res/white_queen.png", square_size)
-    board_position[get_square_index("f1")] = Piece("res/white_bishop.png", square_size)
-    board_position[get_square_index("c1")] = Piece("res/white_bishop.png", square_size)
-    board_position[get_square_index("b1")] = Piece("res/white_knight.png", square_size)
-    board_position[get_square_index("g1")] = Piece("res/white_knight.png", square_size)
-    board_position[get_square_index("a1")] = Piece("res/white_rook.png", square_size)
-    board_position[get_square_index("h1")] = Piece("res/white_rook.png", square_size)
-
-    board_position[get_square_index("e8")] = Piece("res/black_king.png", square_size)
-    board_position[get_square_index("d8")] = Piece("res/black_queen.png", square_size)
-    board_position[get_square_index("f8")] = Piece("res/black_bishop.png", square_size)
-    board_position[get_square_index("c8")] = Piece("res/black_bishop.png", square_size)
-    board_position[get_square_index("b8")] = Piece("res/black_knight.png", square_size)
-    board_position[get_square_index("g8")] = Piece("res/black_knight.png", square_size)
-    board_position[get_square_index("a8")] = Piece("res/black_rook.png", square_size)
-    board_position[get_square_index("h8")] = Piece("res/black_rook.png", square_size)
-
-    for i in range(8):
-        board_position[get_square_index("abcdefgh"[i]+"7")] = Piece("res/black_pawn.png", square_size)
-        board_position[get_square_index("abcdefgh"[i]+"2")] = Piece("res/white_pawn.png", square_size)
-
+    load_pieces(board_position)
     
     selected_index = None
 
     # initialise engine
     parakeet = Engine("../src/parakeet")
-    parakeet.reset()
+    parakeet.reset_board()
 
     running = True
     
