@@ -73,20 +73,21 @@ void Board::makeMove(const Move& move) {
         castlingRightsQueenSide[piece.side] = false;
         kingPositions[piece.side] = move.after;
     }
+    if (piece.type == PieceType::ROOK) {
+        if (piece.side == Side::WHITE) {
+            if (move.before == 0) castlingRightsQueenSide[Side::WHITE] = false;
+            else if (move.before == 7) castlingRightsKingSide[Side::WHITE] = false;
 
-    if (piece.side == Side::WHITE) {
-        if (move.before == 0) castlingRightsQueenSide[Side::WHITE] == false;
-        else if (move.before == 0) castlingRightsKingSide[Side::WHITE] == false;
+            if (move.after == 56) castlingRightsQueenSide[Side::BLACK] = false;
+            else if (move.after == 63) castlingRightsKingSide[Side::BLACK] = false;
 
-        if (move.after == 56) castlingRightsQueenSide[Side::BLACK] == false;
-        else if (move.after == 63) castlingRightsKingSide[Side::BLACK] == false;
+        } else {
+            if (move.before == 56) castlingRightsQueenSide[Side::BLACK] = false;
+            else if (move.before == 63) castlingRightsKingSide[Side::BLACK] = false;
 
-    } else {
-        if (move.before == 56) castlingRightsQueenSide[Side::BLACK] == false;
-        else if (move.before == 63) castlingRightsKingSide[Side::BLACK] == false;
-
-        if (move.after == 0) castlingRightsQueenSide[Side::WHITE] == false;
-        else if (move.after == 0) castlingRightsKingSide[Side::WHITE] == false;
+            if (move.after == 0) castlingRightsQueenSide[Side::WHITE] = false;
+            else if (move.after == 7) castlingRightsKingSide[Side::WHITE] = false;
+        }
     }
 
 }
