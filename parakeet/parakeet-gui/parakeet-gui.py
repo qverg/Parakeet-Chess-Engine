@@ -7,20 +7,26 @@ square_size = board_size/8
 
 def get_file_rank(square: str):
     file = "abcdefgh".index(square[0])
-    rank = 8-int(square[1])
+    rank = int(square[1])-1
 
     return file, rank
 
 def get_coord(square: str):
     file, rank = get_file_rank(square)
-    return file*square_size, rank*square_size
+    return file*square_size, (7-rank)*square_size
 
 def get_coord_from_square_index(ind: int):
-    return (ind%8)*square_size, (ind//8)*square_size
+    return (ind%8)*square_size, (7-(ind//8))*square_size
 
 def get_square_index(square: str):
     file, rank = get_file_rank(square)
     return rank*8 + file
+
+def get_square_index_from_coord(coord: tuple):
+    if coord[0] <= board_size:
+        return int((7-coord[1]//square_size)*8 + coord[0]//square_size)
+    else:
+        return None
 
 def main():
     pygame.init()
@@ -34,10 +40,12 @@ def main():
 
     # Position array
     board_position = [EmptySquare() for i in range(64)]
-    # Load of the pieces
+
+    # Load pieces
     board_position[get_square_index("e1")] = Piece("res/white_king.png", square_size)
 
     running = True
+    selected_index = None
     
     # main loop
     while running:
@@ -49,12 +57,34 @@ def main():
                 pygame.draw.rect(screen, (223, 167, 0), 
                     ((1-i%2)*square_size + j*square_size*2, i*square_size, square_size, square_size))
 
+        # Piece movement with mouse
+        if pygame.mouse.get_pressed()[0] and selected_index is None:
+            square_clicked = get_square_index_from_coord(pygame.mouse.get_pos())
+            if square_clicked is not None:
+                if not board_position[square_clicked].empty:
+                    selected_index = square_clicked
+                    board_position[selected_index].select()
+        if not pygame.mouse.get_pressed()[0] and selected_index is not None:
+            board_position[selected_index].unselect()
+
+            new_square = get_square_index_from_coord(pygame.mouse.get_pos())
+            if new_square is not None:
+                chess_piece = board_position.pop(selected_index)
+                board_position.insert(selected_index, EmptySquare())
+                board_position.pop(new_square)
+                board_position.insert(new_square, chess_piece)
+                
+            selected_index = None
+
         # Draw pieces
         for i in range(64):
-            piece = board_position[i]
-            if not piece.empty:
-                screen.blit(piece.image, get_coord_from_square_index(i))
-
+            chess_piece = board_position[i]
+            if not chess_piece.empty:
+                if not chess_piece.selected:
+                    screen.blit(chess_piece.image, get_coord_from_square_index(i))
+                else:
+                    x, y = pygame.mouse.get_pos()
+                    screen.blit(chess_piece.image, (x-square_size/2, y-square_size/2))
 
         # Ending stuff
         for event in pygame.event.get():
