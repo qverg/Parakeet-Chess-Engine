@@ -43,6 +43,26 @@ def main():
 
     # Load pieces
     board_position[get_square_index("e1")] = Piece("res/white_king.png", square_size)
+    board_position[get_square_index("d1")] = Piece("res/white_queen.png", square_size)
+    board_position[get_square_index("f1")] = Piece("res/white_bishop.png", square_size)
+    board_position[get_square_index("c1")] = Piece("res/white_bishop.png", square_size)
+    board_position[get_square_index("b1")] = Piece("res/white_knight.png", square_size)
+    board_position[get_square_index("g1")] = Piece("res/white_knight.png", square_size)
+    board_position[get_square_index("a1")] = Piece("res/white_rook.png", square_size)
+    board_position[get_square_index("h1")] = Piece("res/white_rook.png", square_size)
+
+    board_position[get_square_index("e8")] = Piece("res/black_king.png", square_size)
+    board_position[get_square_index("d8")] = Piece("res/black_queen.png", square_size)
+    board_position[get_square_index("f8")] = Piece("res/black_bishop.png", square_size)
+    board_position[get_square_index("c8")] = Piece("res/black_bishop.png", square_size)
+    board_position[get_square_index("b8")] = Piece("res/black_knight.png", square_size)
+    board_position[get_square_index("g8")] = Piece("res/black_knight.png", square_size)
+    board_position[get_square_index("a8")] = Piece("res/black_rook.png", square_size)
+    board_position[get_square_index("h8")] = Piece("res/black_rook.png", square_size)
+
+    for i in range(8):
+        board_position[get_square_index("abcdefgh"[i]+"7")] = Piece("res/black_pawn.png", square_size)
+        board_position[get_square_index("abcdefgh"[i]+"2")] = Piece("res/white_pawn.png", square_size)
 
     running = True
     selected_index = None
