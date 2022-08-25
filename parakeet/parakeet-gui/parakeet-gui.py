@@ -1,5 +1,6 @@
 import pygame
 from piece import Piece, EmptySquare
+from engine import Engine
 
 size = width, height = 1000, 600
 board_size = 600
@@ -64,8 +65,14 @@ def main():
         board_position[get_square_index("abcdefgh"[i]+"7")] = Piece("res/black_pawn.png", square_size)
         board_position[get_square_index("abcdefgh"[i]+"2")] = Piece("res/white_pawn.png", square_size)
 
-    running = True
+    
     selected_index = None
+
+    # initialise engine
+    parakeet = Engine("../src/parakeet")
+    parakeet.reset()
+
+    running = True
     
     # main loop
     while running:
@@ -112,6 +119,8 @@ def main():
                 running = False
 
         pygame.display.flip()
+
+    parakeet.close()
 
 if __name__=="__main__":
     main()
