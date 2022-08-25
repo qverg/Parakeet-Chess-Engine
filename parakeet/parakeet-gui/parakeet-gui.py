@@ -81,11 +81,9 @@ def main():
 
     # Position array
     board_position = [EmptySquare() for i in range(64)]
-
-    # Load pieces
-    #load_pieces(board_position)
     
-    selected_index = None
+    selected_index = None   # will store the index of the selected piece
+                            # (None if no piece is selected)
 
     # initialise engine
     parakeet = Engine("../src/parakeet")
@@ -98,15 +96,16 @@ def main():
 
     # main loop
     running = True
-    while running:
+    while running:  #========================== MAIN LOOP ==========================#
         # Draw board
-        screen.fill((255, 255, 255))
+        screen.fill((20, 20, 20))
         pygame.draw.rect(screen, (255, 232, 161), (0,0,board_size,board_size))
         for i in range(8):
             for j in range(4):
                 pygame.draw.rect(screen, (223, 167, 0), 
                     ((1-i%2)*square_size + j*square_size*2, i*square_size, square_size, square_size))
 
+        #==========================================================================================
         # Piece movement with mouse
         if pygame.mouse.get_pressed()[0] and selected_index is None:
             square_clicked = get_square_index_from_coord(pygame.mouse.get_pos())
@@ -114,18 +113,25 @@ def main():
                 if not board_position[square_clicked].empty:
                     selected_index = square_clicked
                     board_position[selected_index].select()
-                    
-        if not pygame.mouse.get_pressed()[0] and selected_index is not None:
+
+        #==========================================================================================   
+        # Actually moving
+        if not pygame.mouse.get_pressed()[0] and selected_index is not None: 
+            # i.e. not clicking but still selected
+
             board_position[selected_index].unselect()
 
             new_square = get_square_index_from_coord(pygame.mouse.get_pos())
             if new_square is not None:
                 parakeet.make_move(new_square)
-                match_position(board_position, parakeet)
                 possible_moves = {} # moves generated no longer relevant
-                
+                match_position(board_position, parakeet)
+            else:
+                parakeet.make_move(selected_index)
+
             selected_index = None
 
+        #==========================================================================================
         # Highlight possible moves
         if selected_index is not None:
             if selected_index not in possible_moves.keys():
@@ -134,18 +140,22 @@ def main():
             
             for sq in possible_moves[selected_index]:
                 highlight_square(screen, int(sq))
-
+        
+        #==========================================================================================
         # Draw pieces
+        # -> Not selected pieces
         for i in range(64):
             chess_piece = board_position[i]
             if not chess_piece.empty:
                 if not chess_piece.selected:
                     screen.blit(chess_piece.image, get_coord_from_square_index(i))                    
 
+        # -> Selected piece
         if selected_index is not None:
             x, y = pygame.mouse.get_pos()
             screen.blit(board_position[selected_index].image, (x-square_size/2, y-square_size/2))
 
+        #==========================================================================================
         # Ending stuff
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -155,5 +165,6 @@ def main():
 
     parakeet.close()
 
+#==========================================================================================
 if __name__=="__main__":
     main()

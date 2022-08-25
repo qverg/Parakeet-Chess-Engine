@@ -52,5 +52,7 @@ class Engine:
         print("Sending", square)
         self.analyzer.sendline(str(square))
         self.skip()
+        return None # Idek if this does anything but I need the main loop not to continue
+                    # until having executed this function completely
 
         
