@@ -119,10 +119,12 @@ def main():
 
             new_square = get_square_index_from_coord(pygame.mouse.get_pos())
             if new_square is not None:
-                chess_piece = board_position.pop(selected_index)
-                board_position.insert(selected_index, EmptySquare())
-                board_position.pop(new_square)
-                board_position.insert(new_square, chess_piece)
+                parakeet.make_move(new_square)
+                match_position(board_position, parakeet)
+                #chess_piece = board_position.pop(selected_index)
+                #board_position.insert(selected_index, EmptySquare())
+                #board_position.pop(new_square)
+                #board_position.insert(new_square, chess_piece)
                 possible_moves = {} # moves generated no longer relevant
                 
             selected_index = None
@@ -132,7 +134,7 @@ def main():
             if selected_index not in possible_moves.keys():
                 print("key not found")
                 possible_moves.update({selected_index : parakeet.suggest_move_square(selected_index)})
-            print(possible_moves[selected_index])
+            
             for sq in possible_moves[selected_index]:
                 highlight_square(screen, int(sq))
 

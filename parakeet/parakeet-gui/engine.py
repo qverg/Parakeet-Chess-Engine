@@ -12,15 +12,20 @@ class Engine:
         lines = self.analyzer.after.split("\n")
         output = ""
         for line in lines:
+            print(line)
             if len(line) > 0 and line[0] != "$" and line[0] != ">":
                 output += line + "\n"
         return output.strip()
+
+    def skip(self):
+        """Skips whatever the engine has to say."""
+        self.analyzer.expect(".+")
 
     def reset_board(self):
         """Resets the board to the starting position."""
         print("Sending $reset")
         self.analyzer.sendline("$reset")
-        print(self.get_engine_output())
+        self.skip()
 
     def close(self):
         """Quits the engine. Idek if this is important but I'm doing this when the program closes."""
@@ -41,4 +46,11 @@ class Engine:
         if '$Enter' in moves:
             return []
         return moves
+
+    def make_move(self, square:int):
+        """Makes a move in Parakeet. Always call directly after suggest_move_square()! (for now)"""
+        print("Sending", square)
+        self.analyzer.sendline(str(square))
+        self.skip()
+
         
