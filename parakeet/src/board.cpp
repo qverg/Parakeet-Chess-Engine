@@ -43,7 +43,7 @@ void Board::makeMove(const Move& move) {
             position[move.after].type = PieceType::ROOK;
         } else if (!move.special1 && move.special0) { // bishop-promotion
             position[move.after].type = PieceType::BISHOP;
-        } else { // knight-promotion
+        } else if (!move.special1 && !move.special0) { // knight-promotion
             position[move.after].type = PieceType::KNIGHT;
         }
     } else if (move.capture) {
@@ -243,6 +243,10 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 enPassantRank = 3;
                 opponent = Side::WHITE;
             }
+            
+            if (squareBeforeLastTwoRanks)
+                Log(LogLevel::DEBUG, "Square before last two ranks");
+            else Log(LogLevel::DEBUG, "NOT Square before last two ranks");
 
             if (position[square+forwardOffset].type == PieceType::EMPTY) {
                 if (squareBeforeLastTwoRanks) {
@@ -254,33 +258,33 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     // promotions
                     moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 1);   // queen
                     moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 0);   // rook
-                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 1);   // bishop
                     moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 0);   // knight
+                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 1);   // bishop
                 }
             }
             // captures
             // right
             if (c.x < 7 && square+forwardOffset+1 < 64 && position[square+forwardOffset+1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);
+                    moves.emplace_back(square, square+forwardOffset+1, 0, 1, 0, 0);
                 } else {
                     // promo captures - right
                     moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 1);   // queen
                     moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 0);   // rook
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 1);   // bishop
                     moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0);   // knight
+                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 1);   // bishop
                 }
             }
             // left
             if (c.x > 0 && square + forwardOffset-1 >= 0 && position[square+forwardOffset-1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0);
+                    moves.emplace_back(square, square+forwardOffset-1, 0, 1, 0, 0);
                 } else {
                     // promo captures - left
                     moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 1);   // queen
                     moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 0);   // rook
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 1);   // bishop
                     moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0);   // knight
+                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 1);   // bishop
                 }
             }
 
