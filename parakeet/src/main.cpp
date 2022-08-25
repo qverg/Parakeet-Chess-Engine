@@ -100,9 +100,8 @@ static void run() {
                         }
                     }
 
-                    if (queriedMove.legal()) {
+                    if (queriedMove.isLegal()) {
                         board.makeMove(queriedMove);
-                        // evaluation here?
                     }
 
                 }

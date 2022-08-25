@@ -31,4 +31,5 @@ Move::Move(unsigned short before, unsigned short after)
     special0    = 0;
 }
 
-bool Move::legal() { return (before != after);}
+bool Move::isLegal() { return (before != after);} // This is the case when constructed
+                                                // and is a sure way to tell if illegal

@@ -16,6 +16,6 @@ public:
     Move(unsigned short before, unsigned short after, unsigned short capture);
     Move(unsigned short before, unsigned short after);
 
-    bool legal();
+    bool isLegal();
 
 };

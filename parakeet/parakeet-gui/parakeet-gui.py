@@ -114,6 +114,7 @@ def main():
                 if not board_position[square_clicked].empty:
                     selected_index = square_clicked
                     board_position[selected_index].select()
+                    
         if not pygame.mouse.get_pressed()[0] and selected_index is not None:
             board_position[selected_index].unselect()
 
@@ -121,10 +122,6 @@ def main():
             if new_square is not None:
                 parakeet.make_move(new_square)
                 match_position(board_position, parakeet)
-                #chess_piece = board_position.pop(selected_index)
-                #board_position.insert(selected_index, EmptySquare())
-                #board_position.pop(new_square)
-                #board_position.insert(new_square, chess_piece)
                 possible_moves = {} # moves generated no longer relevant
                 
             selected_index = None
