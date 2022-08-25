@@ -171,3 +171,17 @@ void loadFEN(std::string fen, Board& board) {
     );
 }
 
+std::string getPositionString(Board& board) {
+    std::string symbols = ".kqbnrp";
+    std::string out = "";
+    for (const auto& piece : board.position) {
+        if (piece.type == PieceType::EMPTY) {
+            out += ".";
+        } else {
+            char offset = (piece.side == Side::WHITE) ? 'A'-'a' : 0;
+            out += symbols[(int)piece.type] + offset;
+
+        }
+    }
+    return out;
+}

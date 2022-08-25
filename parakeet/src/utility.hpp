@@ -12,3 +12,4 @@
 static std::vector<std::string> split(std::string& text, const char& delimiter);
 static void logFENPosition(std::array<Piece, 64>& position);
 void loadFEN(std::string fen, Board& board);
+std::string getPositionString(Board& board);

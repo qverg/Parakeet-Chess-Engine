@@ -333,7 +333,7 @@ void Board::generateMovesInDirection(
     }
 }
 
-std::string Board::algebraic(const Move& move) {
+std::string Board::algebraic(const Move& move) const {
         std::string out = "";
         switch (position[move.before].type) {
             case (PieceType::KING):     out += "K"; break;

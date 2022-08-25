@@ -50,7 +50,9 @@ public:
 
     void generateMoves(const unsigned short square, std::vector<Move>& moves);
 
-    std::string algebraic(const Move& move); // in Board because needs access to position
+    std::string algebraic(const Move& move) const; // in Board because needs access to position
+
+    std::string getPositionString() const;
 
 private:
     void generateMovesInDirection(

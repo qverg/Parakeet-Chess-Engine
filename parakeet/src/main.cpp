@@ -42,6 +42,20 @@ static void run() {
         switch (mode) {
             case BEGIN: {
                 std::cout << "Enter a FEN or $reset\n> ";
+
+                getline(std::cin, in);
+
+                if (in == "$reset") {
+                    board.reset();
+                    mode = RUNNING;
+                } else if (in == "$testmovegen") {
+                    mode = TEST_MOVE_GEN;
+                } else if (in == "$quit") {
+                    quit = true;  
+                } else {
+                    loadFEN(in, board);
+                    mode = RUNNING;
+                }
             } break;
             
             case RUNNING: {
@@ -57,6 +71,8 @@ static void run() {
                         mode = TEST_MOVE_GEN;
                     } else if (in == "$exitboard") {
                         mode = BEGIN;
+                    } else if (in == "$getposition") {
+                        std::cout << getPositionString(board) << std::endl;
                     }
                     
                 } else {    // move given
