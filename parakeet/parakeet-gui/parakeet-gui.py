@@ -108,10 +108,11 @@ def main():
             chess_piece = board_position[i]
             if not chess_piece.empty:
                 if not chess_piece.selected:
-                    screen.blit(chess_piece.image, get_coord_from_square_index(i))
-                else:
-                    x, y = pygame.mouse.get_pos()
-                    screen.blit(chess_piece.image, (x-square_size/2, y-square_size/2))
+                    screen.blit(chess_piece.image, get_coord_from_square_index(i))                    
+
+        if selected_index is not None:
+            x, y = pygame.mouse.get_pos()
+            screen.blit(board_position[selected_index].image, (x-square_size/2, y-square_size/2))
 
         # Ending stuff
         for event in pygame.event.get():
