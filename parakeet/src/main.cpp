@@ -41,7 +41,7 @@ static void run() {
     while (!quit) {
         switch (mode) {
             case BEGIN: {
-                std::cout << "Enter a FEN or $reset\n> ";
+                std::cout << "$Enter a FEN or $reset\n> ";
 
                 getline(std::cin, in);
 
@@ -59,7 +59,7 @@ static void run() {
             } break;
             
             case RUNNING: {
-                std::cout << "Enter a move or command\n> ";
+                std::cout << "$Enter a move or command\n> ";
                 getline(std::cin, in);
 
                 if (in[0] == '$') { // commands
@@ -110,7 +110,7 @@ static void run() {
             } break;
 
             case (TEST_MOVE_GEN): {
-                std::cout << "Enter a square (e.g. e4) or command\n> ";
+                std::cout << "$Enter a square (e.g. e4) or command\n> ";
                 getline(std::cin, in);
 
                 if (in[0] == '$') { // commands

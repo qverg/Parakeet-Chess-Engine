@@ -52,6 +52,23 @@ def load_pieces(board_position: list):
         board_position[get_square_index("abcdefgh"[i]+"7")] = Piece("p", square_size)
         board_position[get_square_index("abcdefgh"[i]+"2")] = Piece("P", square_size)
 
+def match_position(board_position: list, eng: Engine):
+    pos_string = eng.get_position()
+    for i in range(64):
+        if pos_string[i] == ".":
+            if not board_position[i].empty:
+                board_position[i] = EmptySquare()
+        else:
+            board_position[i] = Piece(pos_string[i], square_size)
+
+def highlight_square(screen: pygame.Surface, square: int):
+    x, y = get_coord_from_square_index(square)
+    h = pygame.Surface((square_size, square_size))
+    h.set_alpha(100)
+    h.fill((200,0,0))
+    screen.blit(h, (x, y))
+
+
 def main():
     pygame.init()
     
@@ -66,7 +83,7 @@ def main():
     board_position = [EmptySquare() for i in range(64)]
 
     # Load pieces
-    load_pieces(board_position)
+    #load_pieces(board_position)
     
     selected_index = None
 
@@ -74,9 +91,13 @@ def main():
     parakeet = Engine("../src/parakeet")
     parakeet.reset_board()
 
-    running = True
+    # Match board position to engine
+    match_position(board_position, parakeet)
     
+    possible_moves = {} # will store the move generation for this position
+
     # main loop
+    running = True
     while running:
         # Draw board
         screen.fill((255, 255, 255))
@@ -102,8 +123,18 @@ def main():
                 board_position.insert(selected_index, EmptySquare())
                 board_position.pop(new_square)
                 board_position.insert(new_square, chess_piece)
+                possible_moves = {} # moves generated no longer relevant
                 
             selected_index = None
+
+        # Highlight possible moves
+        if selected_index is not None:
+            if selected_index not in possible_moves.keys():
+                print("key not found")
+                possible_moves.update({selected_index : parakeet.suggest_move_square(selected_index)})
+            print(possible_moves[selected_index])
+            for sq in possible_moves[selected_index]:
+                highlight_square(screen, int(sq))
 
         # Draw pieces
         for i in range(64):
