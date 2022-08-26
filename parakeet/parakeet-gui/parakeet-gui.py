@@ -68,9 +68,19 @@ def highlight_square(screen: pygame.Surface, square: int):
     h.fill((200,0,0))
     screen.blit(h, (x, y))
 
+def find_a_piece(piece_type: str, board_position: list):
+    for i in range(64):
+        if not board_position[i].empty:
+            if board_position[i].type == piece_type:
+                return i
+    return None
 
 def main():
     pygame.init()
+
+    pygame.font.init()
+    pygame.font.get_init()
+    font = pygame.font.SysFont('freesandbold.ttf', 50)
     
     # load and set the logo
     logo = pygame.image.load("res/parakeet-logo.png")
@@ -92,7 +102,10 @@ def main():
     # Match board position to engine
     match_position(board_position, parakeet)
     
-    possible_moves = {} # will store the move generation for this position
+    generated_moves = {} # will store the move generation for this position
+    move_suggested = False
+    check_black = False
+    check_white = False
 
     # main loop
     running = True
@@ -111,6 +124,7 @@ def main():
             square_clicked = get_square_index_from_coord(pygame.mouse.get_pos())
             if square_clicked is not None:
                 if not board_position[square_clicked].empty:
+                    print("Selecting piece at", square_clicked)
                     selected_index = square_clicked
                     board_position[selected_index].select()
 
@@ -119,26 +133,41 @@ def main():
         if not pygame.mouse.get_pressed()[0] and selected_index is not None: 
             # i.e. not clicking but still selected
 
-            board_position[selected_index].unselect()
+            board_position[selected_index].unselect() # this should go here
 
             new_square = get_square_index_from_coord(pygame.mouse.get_pos())
-            if new_square is not None:
-                parakeet.make_move(new_square)
-                possible_moves = {} # moves generated no longer relevant
-                match_position(board_position, parakeet)
-            else:
-                parakeet.make_move(selected_index)
+            print(generated_moves)
+            if new_square is not None and "Enter a target square" in parakeet.last_communication():
+                move_communication = parakeet.make_move(new_square)
+                if new_square in generated_moves[selected_index]:
+                    
+                    check_white = "CHECK white" in move_communication
+                    check_black = "CHECK black" in move_communication
+                    generated_moves = {} # moves generated no longer relevant
 
+                    
+                    match_position(board_position, parakeet)
+            
             selected_index = None
+            move_suggested = False
 
         #==========================================================================================
-        # Highlight possible moves
+        # Highlight possible moves and king if in check
         if selected_index is not None:
-            if selected_index not in possible_moves.keys():
-                possible_moves.update({selected_index : parakeet.suggest_move_square(selected_index)})
+            if not move_suggested:
+                possible_moves = parakeet.suggest_move_square(selected_index)
+                move_suggested = True
+                if selected_index not in generated_moves.keys():
+                    generated_moves.update({selected_index : possible_moves})
             
-            for sq in possible_moves[selected_index]:
+            for sq in generated_moves[selected_index]:
                 highlight_square(screen, int(sq))
+
+        if check_white:
+            highlight_square(screen, find_a_piece('K', board_position))
+
+        if check_black:
+            highlight_square(screen, find_a_piece('k', board_position))
         
         #==========================================================================================
         # Draw pieces

@@ -27,6 +27,7 @@ static void run() {
      * $exitboard       exit the current board
      */
     Board board;
+    std::unordered_map<unsigned short, std::vector<Move>> generatedMoves;
 
     enum Mode {
         BEGIN, RUNNING, TEST_MOVE_GEN
@@ -80,14 +81,19 @@ static void run() {
 
                     //Log(LogLevel::INFO, "Generating moves");
                     std::vector<Move> possibleMoves;
-                    board.generateMoves(before, possibleMoves);
+                    if (generatedMoves.find(before) == generatedMoves.end()) {
+                        board.generateMoves(before, possibleMoves);
+                        generatedMoves[before] = possibleMoves;
+                    } else {
+                        possibleMoves = generatedMoves[before];
+                    }
 
                     for (const auto& move : possibleMoves) {
                         std::cout << move.after << " ";
                     }
                     std::cout << std::endl;
 
-                    std::cout << "> ";
+                    std::cout << "Enter a target square" << std::endl;
                     getline(std::cin, in);
 
                     unsigned int after = stoi(in);
@@ -102,6 +108,10 @@ static void run() {
 
                     if (queriedMove.isLegal()) {
                         board.makeMove(queriedMove);
+                        generatedMoves.clear();
+                        if (board.sideInCheck(Side::WHITE)) std::cout << "CHECK white" << std::endl;
+                        if (board.sideInCheck(Side::BLACK)) std::cout << "CHECK black" << std::endl;
+                        
                     } else {
                         Log(LogLevel::INFO, "Invalid move");
                     }

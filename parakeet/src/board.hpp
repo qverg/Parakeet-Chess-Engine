@@ -53,6 +53,7 @@ public:
     std::string algebraic(const Move& move) const; // in Board because needs access to position
 
     std::string getPositionString() const;
+    bool sideInCheck(const Side& side);
 
 private:
     void generateMovesInDirection(
@@ -68,5 +69,4 @@ private:
         const Side& opponent
     ) const;
 
-    bool sideInCheck(const Side& side);
 };

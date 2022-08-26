@@ -90,14 +90,6 @@ void Board::makeMove(const Move& move) {
             else if (move.after == 7) castlingRightsKingSide[Side::WHITE] = false;
         }
     }
-
-
-    if (sideInCheck(Side::WHITE)) {
-        Log(LogLevel::INFO, "White in check!");
-    }
-    if (sideInCheck(Side::BLACK)) {
-        Log(LogLevel::INFO, "Black in check!");
-    }
 }
 
 void Board::reset() {
@@ -229,8 +221,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
         } break;
         case PieceType::PAWN: {
             // pawn moves
-            Log(LogLevel::DEBUG, "Piece type: pawn");
-
             short forwardOffset;
 
             // min and max are exclusive!
@@ -253,10 +243,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 enPassantRank = 3;
                 opponent = Side::WHITE;
             }
-            
-            if (squareBeforeLastTwoRanks)
-                Log(LogLevel::DEBUG, "Square before last two ranks");
-            else Log(LogLevel::DEBUG, "NOT Square before last two ranks");
 
             if (position[square+forwardOffset].type == PieceType::EMPTY) {
                 if (squareBeforeLastTwoRanks) {

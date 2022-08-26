@@ -18,6 +18,7 @@ pieceTypes = {
 class Piece:
     def __init__(self, piece_type: str, square_size: int):
         self.image = pieceTypes[piece_type]
+        self.type = piece_type
         self.image = pygame.transform.scale(self.image.convert_alpha(), (square_size, square_size))
         self.empty = False
         self.selected = False
