@@ -62,7 +62,11 @@ def match_position(board_position: list, eng: Engine):
             board_position[i] = Piece(pos_string[i], square_size)
 
 def highlight_square(screen: pygame.Surface, square: int):
-    x, y = get_coord_from_square_index(square)
+    try:
+        x, y = get_coord_from_square_index(square)
+    except:
+        print("Warning: trying to highlight a piece that doesn't exist.")
+        return
     h = pygame.Surface((square_size, square_size))
     h.set_alpha(100)
     h.fill((200,0,0))
@@ -124,7 +128,6 @@ def main():
             square_clicked = get_square_index_from_coord(pygame.mouse.get_pos())
             if square_clicked is not None:
                 if not board_position[square_clicked].empty:
-                    print("Selecting piece at", square_clicked)
                     selected_index = square_clicked
                     board_position[selected_index].select()
 
@@ -136,7 +139,6 @@ def main():
             board_position[selected_index].unselect() # this should go here
 
             new_square = get_square_index_from_coord(pygame.mouse.get_pos())
-            print(generated_moves)
             if new_square is not None and "Enter a target square" in parakeet.last_communication():
                 move_communication = parakeet.make_move(new_square)
                 if new_square in generated_moves[selected_index]:
