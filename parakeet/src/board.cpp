@@ -358,15 +358,17 @@ PieceType Board::getNextOpponentPieceInDirection(
 
     for (int i = 1; i < 8; i++) {
         nextCoord = directionFunc(lastCoord);
-        nextSquare = COORD_TO_SQUARE(nextCoord);
 
         if (WITHIN_BOUNDS(nextCoord)) {
+            nextSquare = COORD_TO_SQUARE(nextCoord);
             PieceType nextType = position[nextSquare].type;
+
             if (position[nextSquare].side == opponent) { // capture
                 return nextType;
             } else if (nextType != PieceType::EMPTY) break;
 
         } else break;
+        lastCoord = nextCoord;
     }
 
     return PieceType::EMPTY;
@@ -377,6 +379,17 @@ bool Board::sideInCheck(const Side& side) {
     /* We check for knight positions and cast rays around the king*/
     Coordinate king_pos = kingPositions[side];
     
+    Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
+
+    auto checkForPieceAtCoord = [&](Coordinate coord, PieceType type) {
+        if (WITHIN_BOUNDS(coord)) {
+            Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
+            if (piece_at_coord->side == opponent && piece_at_coord->type == type)
+                return true;
+        }
+        return false;
+    };
+
     // Look for knights
     std::array<Coordinate, 8> candidates = {
                 dirs::north(dirs::north(dirs::east(king_pos))),
@@ -390,41 +403,26 @@ bool Board::sideInCheck(const Side& side) {
     };
 
     for (Coordinate& candidate : candidates) {
-        if (WITHIN_BOUNDS(candidate)) {
-            unsigned short target = COORD_TO_SQUARE(candidate);
-            if (position[target].type == PieceType::KNIGHT) {
-                return true;
-            }
-        }
+        if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
     }
 
     //Log(LogLevel::DEBUG, "No knight checks found");
 
     // Look for enemy pawns in front
-    Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
-
-    auto checkForPawnAtCoord = [&](Coordinate coord) {
-        if (WITHIN_BOUNDS(coord)) {
-            Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
-            if (piece_at_coord->side == opponent && piece_at_coord->type == PieceType::PAWN)
-                return true;
-        }
-        return false;
-    };
 
     if (side == Side::WHITE) {
         Coordinate right = dirs::northeast(king_pos);
-        if (checkForPawnAtCoord(right)) return true;
+        if (checkForPieceAtCoord(right, PieceType::PAWN)) return true;
 
         Coordinate left = dirs::northwest(king_pos);
-        if (checkForPawnAtCoord(left)) return true;
+        if (checkForPieceAtCoord(left, PieceType::PAWN)) return true;
 
     } else {
         Coordinate right = dirs::southeast(king_pos);
-        if (checkForPawnAtCoord(right)) return true;
+        if (checkForPieceAtCoord(right, PieceType::PAWN)) return true;
 
         Coordinate left = dirs::southwest(king_pos);
-        if (checkForPawnAtCoord(left)) return true;
+        if (checkForPieceAtCoord(left, PieceType::PAWN)) return true;
     }
 
     //Log(LogLevel::DEBUG, "No pawn checks found");

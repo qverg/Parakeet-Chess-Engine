@@ -102,6 +102,8 @@ static void run() {
 
                     if (queriedMove.isLegal()) {
                         board.makeMove(queriedMove);
+                    } else {
+                        Log(LogLevel::INFO, "Invalid move");
                     }
 
                 }
