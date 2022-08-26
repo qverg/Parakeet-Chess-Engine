@@ -36,7 +36,7 @@ private:
         static inline Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
     };
 
-    std::unordered_map<Side, unsigned short> kingPositions;
+    std::unordered_map<Side, Coordinate> kingPositions;
 
 public:
     Board();
@@ -56,12 +56,17 @@ public:
 
 private:
     void generateMovesInDirection(
-        const Coordinate coord,
+        const Coordinate& coord,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
-        const Side playingAs,
-        const Side opponent
+        const Side& opponent
     ) const;
 
-    bool sideInCheck(const Side side) const;
+    PieceType getNextOpponentPieceInDirection(
+        const Coordinate& coord,
+        const std::function<Coordinate(Coordinate)>& directionFunc,
+        const Side& opponent
+    ) const;
+
+    bool sideInCheck(const Side& side);
 };

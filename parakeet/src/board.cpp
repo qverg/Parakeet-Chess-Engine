@@ -3,6 +3,7 @@
 
 #define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
+#define SQUARE_TO_COORD(sq) {sq%8, sq/8}
 
 Board::Board() {
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
@@ -24,7 +25,7 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     castlingRightsQueenSide[Side::BLACK] = blackCanCastleQueenSide;
 
     for (int i = 0; i < 64; i++) {
-        if (position[i].type == PieceType::KING) kingPositions[position[i].side] = i;
+        if (position[i].type == PieceType::KING) kingPositions[position[i].side] = SQUARE_TO_COORD(i);
     }
 }
 
@@ -71,7 +72,7 @@ void Board::makeMove(const Move& move) {
     if (piece.type == PieceType::KING) {
         castlingRightsKingSide[piece.side] = false;
         castlingRightsQueenSide[piece.side] = false;
-        kingPositions[piece.side] = move.after;
+        kingPositions[piece.side] = SQUARE_TO_COORD(move.after);
     }
     if (piece.type == PieceType::ROOK) {
         if (piece.side == Side::WHITE) {
@@ -90,6 +91,13 @@ void Board::makeMove(const Move& move) {
         }
     }
 
+
+    if (sideInCheck(Side::WHITE)) {
+        Log(LogLevel::INFO, "White in check!");
+    }
+    if (sideInCheck(Side::BLACK)) {
+        Log(LogLevel::INFO, "Black in check!");
+    }
 }
 
 void Board::reset() {
@@ -113,6 +121,7 @@ void Board::reset() {
         position[i+48]  = {PieceType::PAWN, Side::BLACK};
     }
 
+    kingPositions[Side::WHITE] = {4,0}; kingPositions[Side::BLACK] = {4,7};
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
     enPassantPossible = false;
@@ -166,23 +175,23 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::QUEEN: {
             // queen moves
-            generateMovesInDirection(c, dirs::north,     moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::south,     moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::east,      moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::west,      moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::north,     moves, opponent);
+            generateMovesInDirection(c, dirs::south,     moves, opponent);
+            generateMovesInDirection(c, dirs::east,      moves, opponent);
+            generateMovesInDirection(c, dirs::west,      moves, opponent);
 
-            generateMovesInDirection(c, dirs::northeast, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::southeast, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::northwest, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::southwest, moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::southeast, moves, opponent);
+            generateMovesInDirection(c, dirs::northeast, moves, opponent);
+            generateMovesInDirection(c, dirs::northwest, moves, opponent);
+            generateMovesInDirection(c, dirs::southwest, moves, opponent);
         } break;
 
         case PieceType::BISHOP: {
             // bishop moves
-            generateMovesInDirection(c, dirs::northeast, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::southeast, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::northwest, moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::southwest, moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::northeast, moves, opponent);
+            generateMovesInDirection(c, dirs::southeast, moves, opponent);
+            generateMovesInDirection(c, dirs::northwest, moves, opponent);
+            generateMovesInDirection(c, dirs::southwest, moves, opponent);
         } break;
 
         case PieceType::KNIGHT: {
@@ -200,8 +209,8 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             };
 
             for (Coordinate& candidate : candidates) {
-                unsigned short newSquare = COORD_TO_SQUARE(candidate);
                 if (WITHIN_BOUNDS(candidate)) {
+                    unsigned short newSquare = COORD_TO_SQUARE(candidate);
                     if (position[newSquare].type == PieceType::EMPTY) {
                         moves.emplace_back(square, newSquare);
                     } else if (position[newSquare].side == opponent) {
@@ -213,10 +222,10 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::ROOK: {
             // rook moves
-            generateMovesInDirection(c, dirs::north,    moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::south,    moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::east,     moves, piece.side, opponent);
-            generateMovesInDirection(c, dirs::west,     moves, piece.side, opponent);
+            generateMovesInDirection(c, dirs::north,    moves, opponent);
+            generateMovesInDirection(c, dirs::south,    moves, opponent);
+            generateMovesInDirection(c, dirs::east,     moves, opponent);
+            generateMovesInDirection(c, dirs::west,     moves, opponent);
         } break;
         case PieceType::PAWN: {
             // pawn moves
@@ -310,11 +319,10 @@ void Board::generateMovesInDirection(
         // I'd like it to be efficient (i.e. not calculate coord every time) but also concise (not too many).
         // The ONLY reason I'm using coords at all is for the WITHIN_BOUNDS check
         // There's probably some clever better way of implementing this function.
-        const Coordinate coord,
+        const Coordinate& coord,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
-        const Side playingAs,
-        const Side opponent
+        const Side& opponent
     ) const {
     unsigned short nextSquare;
     Coordinate nextCoord;
@@ -338,18 +346,135 @@ void Board::generateMovesInDirection(
     }
 }
 
-std::string Board::algebraic(const Move& move) const {
-        std::string out = "";
-        switch (position[move.before].type) {
-            case (PieceType::KING):     out += "K"; break;
-            case (PieceType::QUEEN):    out += "Q"; break;
-            case (PieceType::BISHOP):   out += "B"; break;
-            case (PieceType::KNIGHT):   out += "N"; break;
-            case (PieceType::ROOK):     out += "R"; break;
-        }
+PieceType Board::getNextOpponentPieceInDirection(
+        const Coordinate& coord,
+        const std::function<Coordinate(Coordinate)>& directionFunc,
+        const Side& opponent
+    ) const {
+    
+    unsigned short nextSquare;
+    Coordinate nextCoord;
+    Coordinate lastCoord = coord;
 
-        out += (char) (move.after%8) + 'a';
-        out += std::to_string(move.after/8 + 1);
+    for (int i = 1; i < 8; i++) {
+        nextCoord = directionFunc(lastCoord);
+        nextSquare = COORD_TO_SQUARE(nextCoord);
 
-        return out;
+        if (WITHIN_BOUNDS(nextCoord)) {
+            PieceType nextType = position[nextSquare].type;
+            if (position[nextSquare].side == opponent) { // capture
+                return nextType;
+            } else if (nextType != PieceType::EMPTY) break;
+
+        } else break;
     }
+
+    return PieceType::EMPTY;
+
+}
+
+bool Board::sideInCheck(const Side& side) {
+    /* We check for knight positions and cast rays around the king*/
+    Coordinate king_pos = kingPositions[side];
+    
+    // Look for knights
+    std::array<Coordinate, 8> candidates = {
+                dirs::north(dirs::north(dirs::east(king_pos))),
+                dirs::north(dirs::north(dirs::west(king_pos))),
+                dirs::north(dirs::east (dirs::east(king_pos))),
+                dirs::north(dirs::west (dirs::west(king_pos))),
+                dirs::south(dirs::south(dirs::east(king_pos))),
+                dirs::south(dirs::south(dirs::west(king_pos))),
+                dirs::south(dirs::east (dirs::east(king_pos))),
+                dirs::south(dirs::west (dirs::west(king_pos)))
+    };
+
+    for (Coordinate& candidate : candidates) {
+        if (WITHIN_BOUNDS(candidate)) {
+            unsigned short target = COORD_TO_SQUARE(candidate);
+            if (position[target].type == PieceType::KNIGHT) {
+                return true;
+            }
+        }
+    }
+
+    //Log(LogLevel::DEBUG, "No knight checks found");
+
+    // Look for enemy pawns in front
+    Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
+
+    auto checkForPawnAtCoord = [&](Coordinate coord) {
+        if (WITHIN_BOUNDS(coord)) {
+            Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
+            if (piece_at_coord->side == opponent && piece_at_coord->type == PieceType::PAWN)
+                return true;
+        }
+        return false;
+    };
+
+    if (side == Side::WHITE) {
+        Coordinate right = dirs::northeast(king_pos);
+        if (checkForPawnAtCoord(right)) return true;
+
+        Coordinate left = dirs::northwest(king_pos);
+        if (checkForPawnAtCoord(left)) return true;
+
+    } else {
+        Coordinate right = dirs::southeast(king_pos);
+        if (checkForPawnAtCoord(right)) return true;
+
+        Coordinate left = dirs::southwest(king_pos);
+        if (checkForPawnAtCoord(left)) return true;
+    }
+
+    //Log(LogLevel::DEBUG, "No pawn checks found");
+
+    // Look for sliding pieces
+    {   // namespace for all these variables
+        PieceType check_n = getNextOpponentPieceInDirection(king_pos, dirs::north, opponent);
+        if (check_n == PieceType::QUEEN || check_n == PieceType::ROOK) return true;
+
+        PieceType check_s = getNextOpponentPieceInDirection(king_pos, dirs::south, opponent);
+        if (check_s == PieceType::QUEEN || check_s == PieceType::ROOK) return true;
+
+        PieceType check_e = getNextOpponentPieceInDirection(king_pos, dirs::east, opponent);
+        if (check_e == PieceType::QUEEN || check_e == PieceType::ROOK) return true;
+
+        PieceType check_w = getNextOpponentPieceInDirection(king_pos, dirs::west, opponent);
+        if (check_w == PieceType::QUEEN || check_w == PieceType::ROOK) return true;
+
+        //Log(LogLevel::DEBUG, "No lateral checks found");
+
+        PieceType check_ne = getNextOpponentPieceInDirection(king_pos, dirs::northeast, opponent);
+        if (check_ne == PieceType::QUEEN || check_ne == PieceType::BISHOP) return true;
+
+        PieceType check_nw = getNextOpponentPieceInDirection(king_pos, dirs::northwest, opponent);
+        if (check_nw == PieceType::QUEEN || check_nw == PieceType::BISHOP) return true;
+
+        PieceType check_se = getNextOpponentPieceInDirection(king_pos, dirs::southeast, opponent);
+        if (check_se == PieceType::QUEEN || check_se == PieceType::BISHOP) return true;
+
+        PieceType check_sw = getNextOpponentPieceInDirection(king_pos, dirs::southwest, opponent);
+        if (check_sw == PieceType::QUEEN || check_sw == PieceType::BISHOP) return true;
+
+        //Log(LogLevel::DEBUG, "No diagonal checks found");
+    }
+
+    return false;
+}
+
+std::string Board::algebraic(const Move& move) const {
+    std::string out = "";
+    switch (position[move.before].type) {
+        case (PieceType::KING):     out += "K"; break;
+        case (PieceType::QUEEN):    out += "Q"; break;
+        case (PieceType::BISHOP):   out += "B"; break;
+        case (PieceType::KNIGHT):   out += "N"; break;
+        case (PieceType::ROOK):     out += "R"; break;
+    }
+
+    out += (char) (move.after%8) + 'a';
+    out += std::to_string(move.after/8 + 1);
+
+    return out;
+}

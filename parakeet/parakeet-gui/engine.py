@@ -20,27 +20,29 @@ class Engine:
     def skip(self):
         """Skips whatever the engine has to say."""
         self.analyzer.expect(".+")
+        
+        print(self.analyzer.after)
 
     def reset_board(self):
         """Resets the board to the starting position."""
-        print("Sending $reset")
+        #print("Sending $reset")
         self.analyzer.sendline("$reset")
         self.skip()
 
     def close(self):
         """Quits the engine. Idek if this is important but I'm doing this when the program closes."""
-        print("Sending $quit")
+        #print("Sending $quit")
         self.analyzer.sendline("$quit")
     
     def get_position(self):
         """Returns the game position currently stored in the engine."""
-        print("Sending $getposition")
+        #print("Sending $getposition")
         self.analyzer.sendline("$getposition")
         return self.get_engine_output()
 
     def suggest_move_square(self, square: int) -> list:
         """Returns a list of moves possible from the given square."""
-        print("Sending", square)
+        #print("Sending", square)
         self.analyzer.sendline(str(square))
         moves = self.get_engine_output().strip().split()
         if '$Enter' in moves:
@@ -49,7 +51,7 @@ class Engine:
 
     def make_move(self, square:int):
         """Makes a move in Parakeet. Always call directly after suggest_move_square()! (for now)"""
-        print("Sending", square)
+        #print("Sending", square)
         self.analyzer.sendline(str(square))
         self.skip()
         return None # Idek if this does anything but I need the main loop not to continue

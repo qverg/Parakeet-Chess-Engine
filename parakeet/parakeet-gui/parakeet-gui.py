@@ -135,7 +135,6 @@ def main():
         # Highlight possible moves
         if selected_index is not None:
             if selected_index not in possible_moves.keys():
-                print("key not found")
                 possible_moves.update({selected_index : parakeet.suggest_move_square(selected_index)})
             
             for sq in possible_moves[selected_index]:
