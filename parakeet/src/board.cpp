@@ -32,20 +32,18 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
 void Board::makeMove(const Move& move) {
     Piece piece = position[move.before];
 
-    position[move.after] = piece;
-    position[move.before] = EMPTY_SQUARE;
 
     if (enPassantPossible) enPassantPossible = false;
 
     if (move.promotion) {
         if (move.special1 && move.special0) { // queen-promotion
-            position[move.after].type = PieceType::QUEEN;
+            piece.type = PieceType::QUEEN;
         } else if (move.special1 && !move.special0) { // rook-promotion
-            position[move.after].type = PieceType::ROOK;
+            piece.type = PieceType::ROOK;
         } else if (!move.special1 && move.special0) { // bishop-promotion
-            position[move.after].type = PieceType::BISHOP;
+            piece.type = PieceType::BISHOP;
         } else if (!move.special1 && !move.special0) { // knight-promotion
-            position[move.after].type = PieceType::KNIGHT;
+            piece.type = PieceType::KNIGHT;
         }
     } else if (move.capture) {
         if (move.special0) { // en passant
@@ -60,11 +58,19 @@ void Board::makeMove(const Move& move) {
             enPassantPossible = true;
             lastDoublePawnPush = move.after;
         } else if (move.special1 && !move.special0) { // king-side castle
-            position[move.after-1] = {PieceType::ROOK, piece.side};
-            position[move.after+1] = EMPTY_SQUARE;
+            if (!sideInCheck(piece.side)) {
+                position[move.after-1] = {PieceType::ROOK, piece.side};
+                position[move.after+1] = EMPTY_SQUARE;
+            } else {
+                return;
+            }
         } else if (move.special1 && move.special0) { // queen-side castle
-            position[move.after+1] = {PieceType::ROOK, piece.side};
-            position[move.after-2] = EMPTY_SQUARE;
+            if (!sideInCheck(piece.side)) {
+                position[move.after+1] = {PieceType::ROOK, piece.side};
+                position[move.after-2] = EMPTY_SQUARE;
+            } else {
+                return;
+            }
         }
     }
 
@@ -89,6 +95,10 @@ void Board::makeMove(const Move& move) {
         if (move.after == 0) castlingRightsQueenSide[Side::WHITE] = false;
         else if (move.after == 7) castlingRightsKingSide[Side::WHITE] = false;
     }
+
+    position[move.after] = piece;
+    position[move.before] = EMPTY_SQUARE;
+    
 }
 
 void Board::reset() {
@@ -362,6 +372,9 @@ PieceType Board::getNextOpponentPieceInDirection(
 
 bool Board::sideInCheck(const Side& side) {
     /* We check for knight positions and cast rays around the king*/
+    Log(LogLevel::INFO, "Checking for check!"); // Leaving this here to optimise when we're looking for checks later
+
+
     Coordinate king_pos = kingPositions[side];
     
     Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
