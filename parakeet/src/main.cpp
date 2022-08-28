@@ -1,4 +1,4 @@
-#include "utility.hpp"
+#include "main.hpp"
 
 static void run() {
     /* This function communicates with the user to control the engine.
@@ -26,7 +26,7 @@ static void run() {
      * $testmovegen     test move generation
      * $exitboard       exit the current board
      */
-    Board board;
+    Engine engine;
     std::unordered_map<unsigned short, std::vector<Move>> generatedMoves;
 
     enum Mode {
@@ -47,14 +47,14 @@ static void run() {
                 getline(std::cin, in);
 
                 if (in == "$reset") {
-                    board.reset();
+                    engine.board.reset();
                     mode = RUNNING;
                 } else if (in == "$testmovegen") {
                     mode = TEST_MOVE_GEN;
                 } else if (in == "$quit") {
                     quit = true;  
                 } else {
-                    loadFEN(in, board);
+                    loadFEN(in, engine.board);
                     mode = RUNNING;
                 }
             } break;
@@ -65,7 +65,7 @@ static void run() {
 
                 if (in[0] == '$') { // commands
                     if (in == "$reset") {
-                        board.reset();
+                        engine.board.reset();
                     } else if (in == "$quit") {
                         quit = true;
                     } else if (in == "$testmovegen") {
@@ -73,7 +73,7 @@ static void run() {
                     } else if (in == "$exitboard") {
                         mode = BEGIN;
                     } else if (in == "$getposition") {
-                        std::cout << getPositionString(board) << std::endl;
+                        std::cout << getPositionString(engine.board) << std::endl;
                     }
                     
                 } else {    // move given
@@ -82,7 +82,7 @@ static void run() {
                     //Log(LogLevel::INFO, "Generating moves");
                     std::vector<Move> possibleMoves;
                     if (generatedMoves.find(before) == generatedMoves.end()) {
-                        board.generateMoves(before, possibleMoves);
+                        engine.board.generateMoves(before, possibleMoves);
                         generatedMoves[before] = possibleMoves;
                     } else {
                         possibleMoves = generatedMoves[before];
@@ -107,10 +107,10 @@ static void run() {
                     }
 
                     if (queriedMove.isLegal()) {
-                        board.makeMove(queriedMove);
+                        engine.board.makeMove(queriedMove);
                         generatedMoves.clear();
-                        if (board.sideInCheck(Side::WHITE)) std::cout << "CHECK white" << std::endl;
-                        if (board.sideInCheck(Side::BLACK)) std::cout << "CHECK black" << std::endl;
+                        if (engine.board.sideInCheck(Side::WHITE)) std::cout << "CHECK white" << std::endl;
+                        if (engine.board.sideInCheck(Side::BLACK)) std::cout << "CHECK black" << std::endl;
                         
                     } else {
                         Log(LogLevel::INFO, "Invalid move");
@@ -126,7 +126,7 @@ static void run() {
 
                 if (in[0] == '$') { // commands
                     if (in == "$reset") {
-                        board.reset();
+                        engine.board.reset();
                     } else if (in == "$quit") {
                         quit = true;
                     } else if (in == "$exitboard") {
@@ -139,10 +139,10 @@ static void run() {
                     std::cout << rank*8+file << std::endl;
                     
                     std::vector<Move> moves;
-                    board.generateMoves(rank*8 + file, moves);
+                    engine.board.generateMoves(rank*8 + file, moves);
                     
                     for (Move& move : moves) {
-                        std::cout << move.after << " " << algebraic(move, board.position) << " ";
+                        std::cout << move.after << " " << algebraic(move, engine.board.position) << " ";
                     }
                     std::cout << std::endl;
                 }

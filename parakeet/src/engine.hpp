@@ -11,6 +11,9 @@ private:
 public:
     Engine();
 
+    float evaluate();
     float evaluate(Board& board);
-    void  search(Board& initialBoard);
+
+    void search();
+    void search(Board& initialBoard);
 };
