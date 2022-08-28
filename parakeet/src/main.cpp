@@ -1,4 +1,8 @@
 #include "main.hpp"
+#include "utility.hpp"
+#include "engine.hpp"
+
+#include <iostream>
 
 static void run() {
     /* This function communicates with the user to control the engine.

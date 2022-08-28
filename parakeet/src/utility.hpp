@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-//#include <cctype>
 
 #include "types.hpp"
 #include "log.hpp"
