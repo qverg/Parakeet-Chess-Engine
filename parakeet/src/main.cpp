@@ -142,7 +142,7 @@ static void run() {
                     board.generateMoves(rank*8 + file, moves);
                     
                     for (Move& move : moves) {
-                        std::cout << move.after << " " << board.algebraic(move) << " ";
+                        std::cout << move.after << " " << algebraic(move, board.position) << " ";
                     }
                     std::cout << std::endl;
                 }

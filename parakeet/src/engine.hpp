@@ -4,6 +4,11 @@
 
 class Engine {
 public:
+    Board board;
+
+private:
+
+public:
     Engine();
 
     float evaluate(Board& board);

@@ -1,7 +1,7 @@
 #include "engine.hpp"
 
 Engine::Engine() {
-
+    board = Board();
 }
 
 float Engine::evaluate(Board& board) {
