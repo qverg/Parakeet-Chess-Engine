@@ -36,5 +36,5 @@ Move::Move(unsigned short before, unsigned short after, bool willBeCheck)
     willBeCheck = false;
 }
 
-bool Move::isLegal() { return (before != after);} // This is the case when constructed
+bool Move::beforeAndAfterDifferent() { return (before != after);} // This is the case when constructed
                                                 // and is a sure way to tell if illegal

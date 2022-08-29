@@ -114,7 +114,7 @@ static void run() {
                         }
                     }
 
-                    if (queriedMove.isLegal()) {
+                    if (queriedMove.beforeAndAfterDifferent()) {
                         engine.board.makeMove(queriedMove);
                         generatedMoves.clear();
                         if (engine.board.check[Side::WHITE]) std::cout << "CHECK white" << std::endl;
