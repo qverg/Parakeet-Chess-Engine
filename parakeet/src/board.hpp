@@ -27,7 +27,7 @@ namespace dirs {
 class Board {
 public:
     std::array<Piece, 64> position;
-    Side sideToPlay = Side::WHITE;
+    Side sideToPlay;
 
     std::unordered_map<Side, bool> castlingRightsKingSide;
     std::unordered_map<Side, bool> castlingRightsQueenSide;

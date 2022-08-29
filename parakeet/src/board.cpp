@@ -98,6 +98,8 @@ void Board::makeMove(const Move& move) {
 
     position[move.after] = piece;
     position[move.before] = EMPTY_SQUARE;
+
+    sideToPlay = (sideToPlay == Side::WHITE) ? Side::BLACK : Side::WHITE;
     
 }
 
@@ -131,14 +133,18 @@ void Board::reset() {
 }
 
 void Board::generateMoves(const unsigned short square, std::vector<Move>& moves) {
+    Piece* piece = &position[square];
+    if (piece->side != sideToPlay) {
+        return;
+    }
+
     Log(LogLevel::DEBUG, "Generating moves");
 
-    Piece piece = position[square];
-    Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
+    Side opponent = (piece->side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
     Coordinate c = {square % 8, square / 8};
 
-    switch(piece.type) {
+    switch(piece->type) {
         case PieceType::EMPTY:
             break;
 
@@ -160,12 +166,12 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 }
             }
 
-            if (castlingRightsKingSide[piece.side] 
+            if (castlingRightsKingSide[piece->side] 
                 && position[square+1].type == PieceType::EMPTY
                 && position[square+2].type == PieceType::EMPTY) {
                 moves.emplace_back(square, square+2, 0, 0, 1, 0); // king-side castle
             }
-            if (castlingRightsQueenSide[piece.side] 
+            if (castlingRightsQueenSide[piece->side] 
                 && position[square-1].type == PieceType::EMPTY
                 && position[square-2].type == PieceType::EMPTY
                 && position[square-3].type == PieceType::EMPTY) {
@@ -239,7 +245,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
             Side opponent;
 
-            if (piece.side == Side::WHITE) {
+            if (piece->side == Side::WHITE) {
                 forwardOffset = 8;
                 squareBeforeLastTwoRanks = (square < 48);
                 homeRank = 1;
