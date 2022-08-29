@@ -73,19 +73,11 @@ void Board::makeMove(const Move& move) {
             enPassantPossible = true;
             lastDoublePawnPush = move.after;
         } else if (move.special1 && !move.special0) { // king-side castle
-            if (!check[piece.side]) {
-                position[move.after-1] = {PieceType::ROOK, piece.side};
-                position[move.after+1] = EMPTY_SQUARE;
-            } else {
-                return;
-            }
+            position[move.after-1] = {PieceType::ROOK, piece.side};
+            position[move.after+1] = EMPTY_SQUARE;
         } else if (move.special1 && move.special0) { // queen-side castle
-            if (!check[piece.side]) {
-                position[move.after+1] = {PieceType::ROOK, piece.side};
-                position[move.after-2] = EMPTY_SQUARE;
-            } else {
-                return;
-            }
+            position[move.after+1] = {PieceType::ROOK, piece.side};
+            position[move.after-2] = EMPTY_SQUARE;
         }
     }
 
@@ -189,43 +181,44 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     }
                 }
             }
+            if (!check[piece->side]) {
+                if (castlingRightsKingSide[piece->side] 
+                    && position[square+1].type == PieceType::EMPTY
+                    && position[square+2].type == PieceType::EMPTY) {
 
-            if (castlingRightsKingSide[piece->side] 
-                && position[square+1].type == PieceType::EMPTY
-                && position[square+2].type == PieceType::EMPTY) {
-
-                if (getNextOpponentPieceInDirection(c, dirs::west, opponent) == PieceType::KING) {
-                    moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
-                } else {
-                    if (piece->side == Side::WHITE) {
-                        if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
-                            moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
-                        else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
-
+                    if (getNextOpponentPieceInDirection(c, dirs::west, opponent) == PieceType::KING) {
+                        moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
                     } else {
-                        if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
-                            moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
-                        else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
+                        if (piece->side == Side::WHITE) {
+                            if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
+                                moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
+                            else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
+
+                        } else {
+                            if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
+                                moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
+                            else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
+                        }
                     }
                 }
-            }
 
-            if (castlingRightsQueenSide[piece->side] 
-                && position[square-1].type == PieceType::EMPTY
-                && position[square-2].type == PieceType::EMPTY
-                && position[square-3].type == PieceType::EMPTY) {
+                if (castlingRightsQueenSide[piece->side] 
+                    && position[square-1].type == PieceType::EMPTY
+                    && position[square-2].type == PieceType::EMPTY
+                    && position[square-3].type == PieceType::EMPTY) {
 
-                if (getNextOpponentPieceInDirection(c, dirs::east, opponent) == PieceType::KING) {
-                    moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                } else {
-                    if (piece->side == Side::WHITE) {
-                        if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
-                            moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                        else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
+                    if (getNextOpponentPieceInDirection(c, dirs::east, opponent) == PieceType::KING) {
+                        moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
                     } else {
-                        if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
-                            moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                        else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
+                        if (piece->side == Side::WHITE) {
+                            if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
+                                moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
+                            else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
+                        } else {
+                            if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
+                                moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
+                            else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
+                        }
                     }
                 }
             }
