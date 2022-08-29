@@ -11,6 +11,8 @@
 
 struct Coordinate {
     int x; int y;
+
+    static Coordinate distance(const Coordinate& c1, const Coordinate& c2);
 };
 
 namespace dirs {
@@ -28,17 +30,20 @@ class Board {
 public:
     std::array<Piece, 64> position;
     Side sideToPlay;
-
+    
     std::unordered_map<Side, bool> castlingRightsKingSide;
     std::unordered_map<Side, bool> castlingRightsQueenSide;
 
+    std::unordered_map<Side, bool> check;
+    
     bool enPassantPossible;
     unsigned short lastDoublePawnPush; // 64 when there was no last double pawn push
 
 private:
-
-
-    std::unordered_map<Side, Coordinate> kingPositions;
+    struct {
+        std::unordered_map<Side, Coordinate> positions;
+        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacks;
+    } kingsData;
 
 public:
     Board();
@@ -69,4 +74,7 @@ private:
         const Side& opponent
     ) const;
 
+    void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coordinate, 8>& attacks);
+
+    bool pawnAttackingOppKingAtCoord(const Coordinate& pawnCoord, const Side& pawnSide);
 };

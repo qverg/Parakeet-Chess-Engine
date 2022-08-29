@@ -4,6 +4,10 @@
 
 #include <iostream>
 
+int main() {
+    run();
+}
+
 static void run() {
     /* This function communicates with the user to control the engine.
      * All user commands begin with a dollar sign $
@@ -113,8 +117,8 @@ static void run() {
                     if (queriedMove.isLegal()) {
                         engine.board.makeMove(queriedMove);
                         generatedMoves.clear();
-                        if (engine.board.sideInCheck(Side::WHITE)) std::cout << "CHECK white" << std::endl;
-                        if (engine.board.sideInCheck(Side::BLACK)) std::cout << "CHECK black" << std::endl;
+                        if (engine.board.check[Side::WHITE]) std::cout << "CHECK white" << std::endl;
+                        if (engine.board.check[Side::BLACK]) std::cout << "CHECK black" << std::endl;
                         
                     } else {
                         Log(LogLevel::INFO, "Invalid move");
@@ -155,8 +159,4 @@ static void run() {
         }
     }
     
-}
-
-int main() {
-    run();
 }
