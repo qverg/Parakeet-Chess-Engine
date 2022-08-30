@@ -3,21 +3,23 @@ class Move {
     /* see https://www.chessprogramming.org/Encoding_Moves */
 public:
     
-    unsigned short promotion    : 1;
-    unsigned short capture      : 1;
-    unsigned short special1     : 1;
-    unsigned short special0     : 1;
+    int promotion    : 1;
+    int capture      : 1;
+    int special1     : 1;
+    int special0     : 1;
 
-    unsigned short before       : 6;
-    unsigned short after        : 6; // if before and after are both 0, there was no previous move (e.g. beginning of the game)
+    int before;
+    int after; // if before and after are both 0, there was no previous move (e.g. beginning of the game)
 
-    bool willBeCheck;
+    bool willBeCheck = false;
 
     Move();
-    Move(unsigned short before, unsigned short after, unsigned short promotion, unsigned short capture, 
-            unsigned short special1, unsigned short special0, bool willBeCheck);
-    Move(unsigned short before, unsigned short after, unsigned short capture, bool willBeCheck);
-    Move(unsigned short before, unsigned short after, bool willBeCheck);
+    Move(int before, int after, int promotion, int capture, 
+            int special1, int special0);
+    Move(int before, int after, int promotion, int capture, 
+            int special1, int special0, bool willBeCheck);
+    Move(int before, int after, int capture);
+    Move(int before, int after);
 
     bool beforeAndAfterDifferent();
 

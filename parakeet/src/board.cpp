@@ -158,7 +158,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
     Side opponent = (piece->side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
-    Coordinate c = {square % 8, square / 8};
+    Coordinate c = SQUARE_TO_COORD(square);
 
     switch(piece->type) {
         case PieceType::EMPTY:
@@ -175,9 +175,9 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 unsigned short newSquare = COORD_TO_SQUARE(candidate);
                 if (WITHIN_BOUNDS(candidate)) {
                     if (position[newSquare].type == PieceType::EMPTY) {
-                        moves.emplace_back(square, newSquare, false);
+                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
                     } else if (position[newSquare].side == opponent) {
-                        moves.emplace_back(square, newSquare, 1, false);
+                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
                     }
                 }
             }
@@ -185,21 +185,24 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 if (castlingRightsKingSide[piece->side] 
                     && position[square+1].type == PieceType::EMPTY
                     && position[square+2].type == PieceType::EMPTY) {
+                    
+                    addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true); // king-side castle
 
+/*
                     if (getNextOpponentPieceInDirection(c, dirs::west, opponent) == PieceType::KING) {
-                        moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
+                        addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
                     } else {
                         if (piece->side == Side::WHITE) {
                             if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
-                                moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
-                            else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
+                                addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
+                            else addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
 
                         } else {
                             if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
                                 moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
                             else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
                         }
-                    }
+                    }*/
                 }
 
                 if (castlingRightsQueenSide[piece->side] 
@@ -207,6 +210,8 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     && position[square-2].type == PieceType::EMPTY
                     && position[square-3].type == PieceType::EMPTY) {
 
+                    addMoveIfAcceptable(moves, {square, square-2, 0, 0, 1, 1}, opponent, true); // queen-side castle
+/*
                     if (getNextOpponentPieceInDirection(c, dirs::east, opponent) == PieceType::KING) {
                         moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
                     } else {
@@ -219,7 +224,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                                 moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
                             else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -256,18 +261,9 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 if (WITHIN_BOUNDS(candidate)) {
                     unsigned short newSquare = COORD_TO_SQUARE(candidate);
                     if (position[newSquare].type == PieceType::EMPTY) {
-                        moves.emplace_back(square, newSquare, false);
+                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, false, true);
                     } else if (position[newSquare].side == opponent) {
-
-                        Coordinate distanceToOpponentKing = Coordinate::distance(kingsData.positions[opponent], candidate);
-                        if ((distanceToOpponentKing.x == 2 && distanceToOpponentKing.y == 1)
-                            || (distanceToOpponentKing.x == 1 && distanceToOpponentKing.y == 2)) {
-                            moves.emplace_back(square, newSquare, 1, true); // will be attacking opponent king
-                        } else {
-                            moves.emplace_back(square, newSquare, 1, false);   // will not be attacking opponent king
-                        }
-
-
+                        addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, false, true);
                     }
                 }
             }
@@ -282,7 +278,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
         } break;
         case PieceType::PAWN: {
             // pawn moves
-            short forwardOffset;
+            int forwardOffset;
 
             // min and max are exclusive!
             bool squareBeforeLastTwoRanks;
@@ -307,53 +303,43 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
             if (position[square+forwardOffset].type == PieceType::EMPTY) {
                 if (squareBeforeLastTwoRanks) {
-                    moves.emplace_back(square, square+forwardOffset, pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset), opponent));
+                    Move move = {square, square+forwardOffset};
+                    addMoveIfAcceptable(moves, move, opponent);   // single pawn push
                     if (square / 8 == homeRank && position[square+forwardOffset*2].type == PieceType::EMPTY) {
-                        moves.emplace_back(square, square+forwardOffset*2, 0, 0, 0, 1,
-                        pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset*2), opponent));  // double pawn push
+                        addMoveIfAcceptable(moves, {square, square+forwardOffset*2, 0, 0, 0, 1}, opponent); // double pawn push
                     }
                 } else {
                     // promotions
-                    // the willBeCheck arguments are all false temporarily!!
-                    moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 1, false);   // queen
-                    moves.emplace_back(square, square+forwardOffset, 1, 0, 1, 0, false);   // rook
-                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 0, false);   // knight
-                    moves.emplace_back(square, square+forwardOffset, 1, 0, 0, 1, false);   // bishop
+                    addAllPromotionsIfAcceptable(moves, {square, square+forwardOffset, 0}, opponent);
                 }
             }
             // captures
             // right
             if (c.x < 7 && square+forwardOffset+1 < 64 && position[square+forwardOffset+1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
-                    moves.emplace_back(square, square+forwardOffset+1, 0, 1, 0, 0, pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset+1), opponent));
+                    addMoveIfAcceptable(moves, {square, square+forwardOffset+1, 1}, opponent);
                 } else {
                     // promo captures - right
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 1, false);   // queen
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 1, 0, false);   // rook
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 0, false);   // knight
-                    moves.emplace_back(square, square+forwardOffset+1, 1, 1, 0, 1, false);   // bishop
+                    addAllPromotionsIfAcceptable(moves, {square, square+forwardOffset+1, 1}, opponent);
                 }
             }
             // left
             if (c.x > 0 && square + forwardOffset-1 >= 0 && position[square+forwardOffset-1].side == opponent) {
                 if (squareBeforeLastTwoRanks) {
-                    moves.emplace_back(square, square+forwardOffset-1, 0, 1, 0, 0, pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset-1), opponent));
+                    addMoveIfAcceptable(moves, {square, square+forwardOffset-1, 1}, opponent);
                 } else {
                     // promo captures - left
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 1, false);   // queen
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 1, 0, false);   // rook
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 0, false);   // knight
-                    moves.emplace_back(square, square+forwardOffset-1, 1, 1, 0, 1, false);   // bishop
+                    addAllPromotionsIfAcceptable(moves, {square, square+forwardOffset-1, 1}, opponent);
                 }
             }
 
             // en passant capture
             if (enPassantPossible && square/8 == enPassantRank) {
                 if (lastDoublePawnPush == square+1)
-                    moves.emplace_back(square, square+forwardOffset+1, 0, 1, 0, 1, pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset+1), opponent));
+                    addMoveIfAcceptable(moves, {square, square+forwardOffset+1, 0, 1, 0, 1}, opponent, false, false, true);
 
                 else if (lastDoublePawnPush == square-1)
-                    moves.emplace_back(square, square+forwardOffset-1, 0, 1, 0, 1, pawnAttackingOppKingAtCoord(SQUARE_TO_COORD(square+forwardOffset-1), opponent));
+                    addMoveIfAcceptable(moves, {square, square+forwardOffset-1, 0, 1, 0, 1}, opponent, false, false, true);
             }
 
         } break;
@@ -362,17 +348,103 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
     Log(LogLevel::DEBUG, "Move generation done");
 }
 
+void Board::addMoveIfAcceptable(
+    std::vector<Move>& moves,
+    Move move,
+    const Side& opponent,
+    const bool isKing,
+    const bool isKnight,
+    const bool enPassant
+    ) {
+
+    Piece* piece = &position[move.before];
+    std::unordered_map<Side, bool> checksIfMove;
+    getChecksIfMove(checksIfMove, move.before, move.after, *piece, isKing, isKnight, enPassant);
+
+    if (checksIfMove[piece->side]) return;  // we can't put ourselves in check
+
+    if (checksIfMove[opponent])
+        move.willBeCheck = true;
+    
+    moves.emplace_back(move);
+    
+}
+
+void Board::addAllPromotionsIfAcceptable(
+    std::vector<Move>& moves,
+    Move move, // in the form {before, after, capture} (not by reference because rvalues need to be possible)
+    const Side& opponent
+    ) {
+
+    Piece* piece = &position[move.before];
+
+    std::array<Piece, 64> queenPromo;
+    makeHypotheticalMoveInPosition(position, queenPromo, move.before, move.after, {PieceType::QUEEN, piece->side});
+
+    // check if we're not putting ourselves in check
+    if (sideInCheck(piece->side, queenPromo, kingsData.positions, kingsData.knightAttacks)) return;
+
+
+    std::array<Piece, 64> rookPromo;
+    std::array<Piece, 64> bishopPromo;
+    std::array<Piece, 64> knightPromo;
+
+    makeHypotheticalMoveInPosition(position, rookPromo, move.before, move.after, {PieceType::ROOK, piece->side});
+    makeHypotheticalMoveInPosition(position, bishopPromo, move.before, move.after, {PieceType::BISHOP, piece->side});
+    makeHypotheticalMoveInPosition(position, knightPromo, move.before, move.after, {PieceType::KNIGHT, piece->side});
+
+    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 1,       // these casts are scuffed but oh well I mean they're ints anyway surely the compiler gets rid of this
+        sideInCheck(opponent, queenPromo, kingsData.positions, kingsData.knightAttacks));   // queen promo
+
+    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 0, 0,
+        sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks));  // knight promo
+
+    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 0,
+        sideInCheck(opponent, rookPromo, kingsData.positions, kingsData.knightAttacks));    // rook promo
+
+    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 0, 1,
+        sideInCheck(opponent, bishopPromo, kingsData.positions, kingsData.knightAttacks));  // bishop promo
+
+    // (see https://www.chessprogramming.org/Encoding_Moves)
+}
+
+bool Board::getChecksIfMove(
+        std::unordered_map<Side, bool>& checks,
+        const int before,
+        const int after,
+        const Piece& piece,
+        const bool isKing,
+        const bool isKnight,
+        const bool enPassant
+        ) {
+
+    std::array<Piece, 64> hypotheticalPos;
+    makeHypotheticalMoveInPosition(position, hypotheticalPos, before, after, piece, enPassant);
+
+    if (isKing) {
+        Coordinate afterCoord = SQUARE_TO_COORD(after);
+
+        std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
+        kingPositions[piece.side] = afterCoord;
+
+        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
+        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings[piece.side]);
+
+        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,isKnight);
+        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,isKnight);
+    } else {
+        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingsData.positions,kingsData.knightAttacks,isKnight);
+        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingsData.positions,kingsData.knightAttacks,isKnight);
+    }
+}
 
 void Board::generateMovesInDirection(
-        // probably make this argument list better somehow.
-        // I'd like it to be efficient (i.e. not calculate coord every time) but also concise (not too many).
-        // The ONLY reason I'm using coords at all is for the WITHIN_BOUNDS check
-        // There's probably some clever better way of implementing this function.
         const Coordinate& coord,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
         const Side& opponent
-    ) const {
+    ) {
+
     unsigned short nextSquare;
     Coordinate nextCoord;
     Coordinate lastCoord = coord;
@@ -384,14 +456,10 @@ void Board::generateMovesInDirection(
         if (WITHIN_BOUNDS(nextCoord)) {
 
             if (position[nextSquare].type == PieceType::EMPTY) {
-                if (getNextOpponentPieceInDirection(nextCoord, directionFunc, opponent) == PieceType::KING)
-                    moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0, true);
-                else moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0, false);
+                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0}, opponent);
                 lastCoord = nextCoord;
             } else if (position[nextSquare].side == opponent) { // capture
-                if (getNextOpponentPieceInDirection(nextCoord, directionFunc, opponent) == PieceType::KING)
-                    moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 1, 0, 0, true);
-                else moves.emplace_back(COORD_TO_SQUARE(coord), nextSquare, 0, 1, 0, 0, false);
+                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, 0, 1, 0, 0}, opponent);
                 break;
             } else break;
 
@@ -404,6 +472,15 @@ PieceType Board::getNextOpponentPieceInDirection(
         const std::function<Coordinate(Coordinate)>& directionFunc,
         const Side& opponent
     ) const {
+    return getNextOpponentPieceInDirection(coord, position, directionFunc, opponent);
+}
+
+PieceType Board::getNextOpponentPieceInDirection(
+        const Coordinate& coord,
+        const std::array<Piece, 64>& position,
+        const std::function<Coordinate(Coordinate)>& directionFunc,
+        const Side& opponent
+    ) {
     
     unsigned short nextSquare;
     Coordinate nextCoord;
@@ -428,19 +505,29 @@ PieceType Board::getNextOpponentPieceInDirection(
 
 }
 
-bool Board::sideInCheck(const Side& side) {
+bool Board::sideInCheck(const Side& side, const bool includeKnights) {
+    return sideInCheck(side, position, kingsData.positions, kingsData.knightAttacks, includeKnights);
+}
+
+bool Board::sideInCheck(
+    const Side& side,
+    const std::array<Piece, 64>& position,
+    std::unordered_map<Side, Coordinate>& kingPositions,
+    std::unordered_map<Side, std::array<Coordinate, 8>>& knightAttacksAroundKings,
+    const bool includeKnights
+    ) {
     /* We check for knight positions and cast rays around the king*/
     Log(LogLevel::INFO, "Checking for check!"); // Leaving this here to optimise when we're looking for checks later
 
 
-    Coordinate king_pos = kingsData.positions[side];
+    Coordinate king_pos = kingPositions[side];
     
     Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
     // Checking only for opponent built in to lambda!
     auto checkForPieceAtCoord = [&](Coordinate coord, PieceType type) {
         if (WITHIN_BOUNDS(coord)) {
-            Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
+            const Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
             if (piece_at_coord->side == opponent && piece_at_coord->type == type)
                 return true;
         }
@@ -451,7 +538,7 @@ bool Board::sideInCheck(const Side& side) {
     std::array<Coordinate, 8> candidates;
     getKnightAttackCoordsAtCoord(king_pos, candidates);
 
-    for (Coordinate& candidate : kingsData.knightAttacks[side]) {
+    for (Coordinate& candidate : knightAttacksAroundKings[side]) {
         if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
     }
 
@@ -478,30 +565,30 @@ bool Board::sideInCheck(const Side& side) {
 
     // Look for sliding pieces
     {   // namespace for all these variables
-        PieceType check_n = getNextOpponentPieceInDirection(king_pos, dirs::north, opponent);
+        PieceType check_n = getNextOpponentPieceInDirection(king_pos, position, dirs::north, opponent);
         if (check_n == PieceType::QUEEN || check_n == PieceType::ROOK) return true;
 
-        PieceType check_s = getNextOpponentPieceInDirection(king_pos, dirs::south, opponent);
+        PieceType check_s = getNextOpponentPieceInDirection(king_pos, position, dirs::south, opponent);
         if (check_s == PieceType::QUEEN || check_s == PieceType::ROOK) return true;
 
-        PieceType check_e = getNextOpponentPieceInDirection(king_pos, dirs::east, opponent);
+        PieceType check_e = getNextOpponentPieceInDirection(king_pos, position, dirs::east, opponent);
         if (check_e == PieceType::QUEEN || check_e == PieceType::ROOK) return true;
 
-        PieceType check_w = getNextOpponentPieceInDirection(king_pos, dirs::west, opponent);
+        PieceType check_w = getNextOpponentPieceInDirection(king_pos, position, dirs::west, opponent);
         if (check_w == PieceType::QUEEN || check_w == PieceType::ROOK) return true;
 
         //Log(LogLevel::DEBUG, "No lateral checks found");
 
-        PieceType check_ne = getNextOpponentPieceInDirection(king_pos, dirs::northeast, opponent);
+        PieceType check_ne = getNextOpponentPieceInDirection(king_pos, position, dirs::northeast, opponent);
         if (check_ne == PieceType::QUEEN || check_ne == PieceType::BISHOP) return true;
 
-        PieceType check_nw = getNextOpponentPieceInDirection(king_pos, dirs::northwest, opponent);
+        PieceType check_nw = getNextOpponentPieceInDirection(king_pos, position, dirs::northwest, opponent);
         if (check_nw == PieceType::QUEEN || check_nw == PieceType::BISHOP) return true;
 
-        PieceType check_se = getNextOpponentPieceInDirection(king_pos, dirs::southeast, opponent);
+        PieceType check_se = getNextOpponentPieceInDirection(king_pos, position, dirs::southeast, opponent);
         if (check_se == PieceType::QUEEN || check_se == PieceType::BISHOP) return true;
 
-        PieceType check_sw = getNextOpponentPieceInDirection(king_pos, dirs::southwest, opponent);
+        PieceType check_sw = getNextOpponentPieceInDirection(king_pos, position, dirs::southwest, opponent);
         if (check_sw == PieceType::QUEEN || check_sw == PieceType::BISHOP) return true;
 
         //Log(LogLevel::DEBUG, "No diagonal checks found");
@@ -524,15 +611,35 @@ void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coo
 }
 
 bool Board::pawnAttackingOppKingAtCoord(const Coordinate& pawnCoord, const Side& pawnSide) {
-        if (pawnSide == Side::WHITE) {
-            Coordinate kingCoord = kingsData.positions[Side::BLACK];
-            if (kingCoord.y == pawnCoord.y + 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
-                    return true;
+    if (pawnSide == Side::WHITE) {
+        Coordinate kingCoord = kingsData.positions[Side::BLACK];
+        if (kingCoord.y == pawnCoord.y + 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
+                return true;
 
-        } else {
-            Coordinate kingCoord = kingsData.positions[Side::WHITE];
-            if (kingCoord.y == pawnCoord.y - 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
-                    return true;
-        }
-        return false;
+    } else {
+        Coordinate kingCoord = kingsData.positions[Side::WHITE];
+        if (kingCoord.y == pawnCoord.y - 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
+                return true;
     }
+    return false;
+}
+
+// Just makes before empty and after the new piece
+void Board::makeHypotheticalMoveInPosition(
+        const std::array<Piece, 64>& oldPosition,
+        std::array<Piece, 64>& newPosition,
+        const unsigned int before,
+        const unsigned int after,
+        const Piece piece,
+        const bool enPassant
+    ) {
+    
+    newPosition = oldPosition;
+    newPosition[after] = piece;
+    newPosition[before] = EMPTY_SQUARE;
+
+    if (enPassant) {
+        if (after-before == 9 || after-before == -7) newPosition[before+1] = EMPTY_SQUARE;
+        else if (after-before == 7 || after-before == -9) newPosition[before-1] = EMPTY_SQUARE;
+    }
+}

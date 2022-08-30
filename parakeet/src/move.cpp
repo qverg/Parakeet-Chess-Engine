@@ -7,33 +7,35 @@ Move::Move() {
     capture     = 0;
     special1    = 0;
     special0    = 0;
-
-    willBeCheck = false;
 }
 
-Move::Move(unsigned short before, unsigned short after, unsigned short promotion, unsigned short capture, 
-            unsigned short special1, unsigned short special0, bool willBeCheck)
+Move::Move(int before, int after, int promotion, int capture, 
+            int special1, int special0)
+    : before(before), after(after), promotion(promotion), capture(capture), special1(special1), special0(special0)
+{
+}
+
+Move::Move(int before, int after, int promotion, int capture, 
+            int special1, int special0, bool willBeCheck)
     : before(before), after(after), promotion(promotion), capture(capture), special1(special1), special0(special0), willBeCheck(willBeCheck)
 {
 }
 
-Move::Move(unsigned short before, unsigned short after, unsigned short capture, bool willBeCheck)
-    : before(before), after(after), capture(capture), willBeCheck(willBeCheck)
+Move::Move(int before, int after, int capture)
+    : before(before), after(after), capture(capture)
 {
     promotion   = 0;
     special1    = 0;
     special0    = 0;
 }
 
-Move::Move(unsigned short before, unsigned short after, bool willBeCheck)
-    : before(before), after(after), willBeCheck(willBeCheck)
+Move::Move(int before, int after)
+    : before(before), after(after)
 {
     promotion   = 0;
     capture     = 0;
     special1    = 0;
     special0    = 0;
-
-    willBeCheck = false;
 }
 
 bool Move::beforeAndAfterDifferent() { return (before != after);} // This is the case when constructed
