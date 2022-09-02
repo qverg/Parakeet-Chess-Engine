@@ -430,11 +430,13 @@ bool Board::getChecksIfMove(
         std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
         getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings[piece.side]);
 
-        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,isKnight);
-        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,isKnight);
+        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
+        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
     } else {
-        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingsData.positions,kingsData.knightAttacks,isKnight);
-        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingsData.positions,kingsData.knightAttacks,isKnight);
+        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingsData.positions,
+            kingsData.knightAttacks, (isKnight && piece.side == Side::BLACK));
+        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingsData.positions,
+            kingsData.knightAttacks, (isKnight && piece.side == Side::WHITE));
     }
 }
 
@@ -535,13 +537,14 @@ bool Board::sideInCheck(
     };
 
     // Look for knights
-    std::array<Coordinate, 8> candidates;
-    getKnightAttackCoordsAtCoord(king_pos, candidates);
+    if (includeKnights){
+        std::array<Coordinate, 8> candidates;
+        getKnightAttackCoordsAtCoord(king_pos, candidates);
 
-    for (Coordinate& candidate : knightAttacksAroundKings[side]) {
-        if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
+        for (Coordinate& candidate : knightAttacksAroundKings[side]) {
+            if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
+        }
     }
-
     //Log(LogLevel::DEBUG, "No knight checks found");
 
     // Look for enemy pawns in front
