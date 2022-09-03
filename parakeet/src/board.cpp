@@ -187,22 +187,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     && position[square+2].type == PieceType::EMPTY) {
                     
                     addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true); // king-side castle
-
-/*
-                    if (getNextOpponentPieceInDirection(c, dirs::west, opponent) == PieceType::KING) {
-                        addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
-                    } else {
-                        if (piece->side == Side::WHITE) {
-                            if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
-                                addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
-                            else addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true, false); // king-side castle
-
-                        } else {
-                            if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
-                                moves.emplace_back(square, square+2, 0, 0, 1, 0, true); // king-side castle
-                            else moves.emplace_back(square, square+2, 0, 0, 1, 0, false); // king-side castle
-                        }
-                    }*/
                 }
 
                 if (castlingRightsQueenSide[piece->side] 
@@ -211,20 +195,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     && position[square-3].type == PieceType::EMPTY) {
 
                     addMoveIfAcceptable(moves, {square, square-2, 0, 0, 1, 1}, opponent, true); // queen-side castle
-/*
-                    if (getNextOpponentPieceInDirection(c, dirs::east, opponent) == PieceType::KING) {
-                        moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                    } else {
-                        if (piece->side == Side::WHITE) {
-                            if (getNextOpponentPieceInDirection(c, dirs::north, Side::BLACK) == PieceType::KING)
-                                moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                            else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
-                        } else {
-                            if (getNextOpponentPieceInDirection(c, dirs::south, Side::WHITE) == PieceType::KING)
-                                moves.emplace_back(square, square-2, 0, 0, 1, 1, true); // queen-side castle
-                            else moves.emplace_back(square, square-2, 0, 0, 1, 1, false); // queen-side castle
-                        }
-                    }*/
                 }
             }
 
@@ -360,8 +330,29 @@ void Board::addMoveIfAcceptable(
     Piece* piece = &position[move.before];
     std::unordered_map<Side, bool> checksIfMove;
     getChecksIfMove(checksIfMove, move.before, move.after, *piece, isKing, isKnight, enPassant);
-
+    
     if (checksIfMove[piece->side]) return;  // we can't put ourselves in check
+
+    if (isKing && move.special1) {
+
+        int duringCastleSquare;
+        if (!move.special0) duringCastleSquare = move.after-1;  // king-side castle
+        else duringCastleSquare = move.after+1;                 // queen-side castle
+        
+        std::array<Piece, 64> duringCastle;
+        makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, *piece);
+
+        Coordinate afterCoord = SQUARE_TO_COORD(duringCastleSquare);
+
+        std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
+        kingPositions[piece->side] = afterCoord;
+
+        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
+        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings[piece->side]);
+
+        if (sideInCheck(piece->side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
+    }
+
 
     if (checksIfMove[opponent])
         move.willBeCheck = true;
