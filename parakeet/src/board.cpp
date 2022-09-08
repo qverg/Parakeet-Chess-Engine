@@ -110,8 +110,7 @@ void Board::makeMove(const Move& move) {
     sideToPlay = (sideToPlay == Side::WHITE) ? Side::BLACK : Side::WHITE;
     
     check[sideToPlay] = move.willBeCheck;
-    check[piece.side] = false;  // you can't move so that you will be in check -
-                                // this has to be implemented during move generation
+    check[piece.side] = false;  // you can't move so that you will be in check (implemented during move gen)
 }
 
 void Board::reset() {
