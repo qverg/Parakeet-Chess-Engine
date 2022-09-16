@@ -1,10 +1,24 @@
 #include "main.hpp"
 #include "utility.hpp"
 #include "engine.hpp"
+#include "log.hpp"
 
 #include <iostream>
+#include <exception>
 
-int main() {
+LogLevel LOG_LEVEL;
+
+int main(int argc, char* argv[]) {
+    if (argc = 2) {
+        std::string arg1 = argv[1];
+        if (arg1 == "debug") LOG_LEVEL = LogLevel::DEBUG;
+        else if (arg1 == "info") LOG_LEVEL = LogLevel::INFO;
+        else if (arg1 == "warn") LOG_LEVEL = LogLevel::WARN;
+        else {
+            throw std::invalid_argument("Unknown debug level. Acceptable levels are debug, info and warn.");
+        }
+    }
+
     run();
 }
 

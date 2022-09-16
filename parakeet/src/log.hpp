@@ -5,7 +5,7 @@ enum class LogLevel {
     ERROR, WARN, INFO, DEBUG
 };
 
-#define LOG_LEVEL LogLevel::WARN
+extern LogLevel LOG_LEVEL;
 
 template<typename T>
 void Log(LogLevel level, const T& msg) {
