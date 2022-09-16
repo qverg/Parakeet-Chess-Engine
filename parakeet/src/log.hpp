@@ -4,6 +4,7 @@ enum class LogLevel {
     ERROR, WARN, INFO, DEBUG
 };
 
-#define LOG_LEVEL LogLevel::WARN
+#define LOG_LEVEL LogLevel::DEBUG
 
-void Log(LogLevel level, std::string msg);
+template<typename T>
+void Log(LogLevel level, const T& msg);
