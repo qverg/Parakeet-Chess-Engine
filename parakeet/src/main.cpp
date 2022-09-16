@@ -31,7 +31,7 @@ static void run() {
     /* Commands:
      * $quit            quit parakeet
      * $reset           reset board to normal starting position
-     * $testmovegen     test move generation
+     * $testmovegen     test move generation (count moves in given position)
      * $exitboard       exit the current board
      */
     Engine engine;
@@ -129,7 +129,7 @@ static void run() {
             } break;
 
             case (TEST_MOVE_GEN): {
-                std::cout << "$Enter a square (e.g. e4) or command\n> ";
+                std::cout << "$Enter depth (disabled for now)\n> ";
                 getline(std::cin, in);
 
                 if (in[0] == '$') { // commands
@@ -140,19 +140,10 @@ static void run() {
                     } else if (in == "$exitboard") {
                         mode = BEGIN;
                     }
-                } else {    
-                    unsigned int file = in[0] - 'a';
-                    unsigned int rank = in[1] - '1';
-                    Log(LogLevel::DEBUG, "Generating on the following square:");
-                    std::cout << rank*8+file << std::endl;
-                    
-                    std::vector<Move> moves;
-                    engine.board.generateMoves(rank*8 + file, moves);
-                    
-                    for (Move& move : moves) {
-                        std::cout << move.after << " " << algebraic(move, engine.board.position) << " ";
-                    }
-                    std::cout << std::endl;
+                } else {
+                    int depth = stoi(in);
+                    std::cout << engine.countMoves(depth) << std::endl;
+                    mode = Mode::RUNNING;
                 }
 
             } break;
