@@ -2,7 +2,7 @@
 
 ### Requirements:
  - Windows
- - Python 3
+ - Python 3 (I'm using 3.10)
     - pygame
     - pexpect
 
