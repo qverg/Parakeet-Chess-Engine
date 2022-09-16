@@ -2,10 +2,14 @@
 
 ### Requirements:
  - Windows
- - Python 3
+ - Python 3 (I'm using 3.10)
     - pygame
     - pexpect
 
 I'm using g++ to compile.
 
+### Run using the GUI
 Compile using ``./compile`` (batch file -- adjust if needed) inside parakeet/parakeet-gui and run using ``./run`` in the same directory.
+
+### Running just the engine
+Compile using ``./compile`` inside parakeet/src and run using ``./parakeet``.
