@@ -21,6 +21,8 @@ public:
     Move(int before, int after, int capture);
     Move(int before, int after);
 
-    bool beforeAndAfterDifferent();
+    bool beforeAndAfterDifferent() const;
+    bool isCastle() const;
+    bool isEnPassant() const;
 
 };

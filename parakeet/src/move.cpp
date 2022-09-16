@@ -38,5 +38,13 @@ Move::Move(int before, int after)
     special0    = 0;
 }
 
-bool Move::beforeAndAfterDifferent() { return (before != after);} // This is the case when constructed
+bool Move::beforeAndAfterDifferent() const { return (before != after);} // This is the case when constructed
                                                 // and is a sure way to tell if illegal
+
+bool Move::isCastle() const {
+    return (!promotion && !capture && special1);
+}
+
+bool Move::isEnPassant() const {
+    return (!promotion && capture && special0);
+}

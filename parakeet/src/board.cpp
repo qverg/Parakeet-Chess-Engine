@@ -511,7 +511,6 @@ bool Board::sideInCheck(
     /* We check for knight positions and cast rays around the king*/
     Log(LogLevel::INFO, "Checking for check!"); // Leaving this here to optimise when we're looking for checks later
 
-
     Coordinate king_pos = kingPositions[side];
     
     Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;

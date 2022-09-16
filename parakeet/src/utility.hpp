@@ -7,6 +7,7 @@
 #include "types.hpp"
 #include "log.hpp"
 #include "board.hpp"
+#include "engine.hpp"
 
 static std::vector<std::string> split(std::string& text, const char& delimiter);
 static void logFENPosition(std::array<Piece, 64>& position);

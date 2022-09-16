@@ -142,7 +142,8 @@ static void run() {
                     }
                 } else {
                     int depth = stoi(in);
-                    std::cout << engine.countMoves(depth) << std::endl;
+                    engine.countMoves(depth);
+                    
                     mode = Mode::RUNNING;
                 }
 

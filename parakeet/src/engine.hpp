@@ -2,6 +2,22 @@
 
 #include "board.hpp"
 
+struct MoveCounter {
+    int moves = 0;
+    int captures = 0;
+    int enPassant = 0; 
+    int castles = 0;
+    int promotions = 0;
+
+    void operator+=(const MoveCounter& counter) {
+        moves += counter.moves;
+        captures += counter.captures;
+        enPassant += counter.enPassant;
+        castles += counter.castles;
+        promotions += counter.promotions;
+    }
+};
+
 class Engine {
 public:
     Board board;
@@ -9,12 +25,12 @@ public:
 private:
     float evaluate(const Board& board);
     void search(const Board& initialBoard);
-    int countMoves(Board& board, const int depth=1) const;
+    void countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1);
 
 public:
     Engine();
 
     float evaluate();
     void search();
-    int countMoves(const int depth=1);
+    void countMoves(const int depth=1);
 };

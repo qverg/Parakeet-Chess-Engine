@@ -1,5 +1,7 @@
 #include "engine.hpp"
+
 #include <vector>
+#include <iostream>
 
 Engine::Engine() {
     board = Board();
@@ -22,28 +24,52 @@ void Engine::search(const Board& initialBoard) {
     
 }
 
-int Engine::countMoves(const int depth) {
-    return countMoves(board, depth);
+void printMoveCounter(const MoveCounter& counter, const int depth) {
+    std::cout << "Depth " << depth << std::endl;
+    std::cout << "Moves:     " << counter.moves << std::endl;
+    std::cout << "Captures:  " << counter.captures << std::endl;
+    std::cout << "En passant:" << counter.enPassant << std::endl;
+    std::cout << "Castles:   " << counter.castles << std::endl;
+    std::cout << "Promotions:" << counter.promotions << std::endl;
+    std::cout << std::endl;
 }
 
-int Engine::countMoves(Board& board, const int depth) const {
-    int count = 0;
+void Engine::countMoves(int depth) {
+    std::unordered_map<int, MoveCounter> countersPerDepth;
+    for (int i = depth; i > 0; i--) {
+        countersPerDepth[i] = MoveCounter();
+    }
+    countMoves(board, countersPerDepth, depth);
+
+    for (; depth > 0; depth--) {
+        printMoveCounter(countersPerDepth[depth], depth);
+    }
+}
+
+
+
+void Engine::countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth) {
+    MoveCounter& counter = countersPerDepth[depth];
     for (int square = 0; square < 64; square++) {
         if (board.position[square].side == board.sideToPlay) {
             std::vector<Move> moves;
             board.generateMoves(square, moves);
 
-            count += moves.size();
+            for (const auto& move : moves) {
+                counter.moves++;
+                if (move.capture) counter.captures++;
+                if (move.isEnPassant()) counter.enPassant++;
+                if (move.isCastle()) counter.castles++;
+                if (move.promotion) counter.promotions++;
 
-            if (depth > 1) {
-                for (const auto& move : moves) {
+                if (depth > 1) {
                     Board newBoard = board;
                     newBoard.makeMove(move);
-                    count += countMoves(newBoard, depth-1);
+                    countMoves(newBoard, countersPerDepth, depth-1);
                 }
             }
+
+
         }
     }
-
-    return count;
 }
