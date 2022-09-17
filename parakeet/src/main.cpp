@@ -9,7 +9,7 @@
 LogLevel LOG_LEVEL;
 
 int main(int argc, char* argv[]) {
-    if (argc = 2) {
+    if (argc == 2) {
         std::string arg1 = argv[1];
         if (arg1 == "debug") LOG_LEVEL = LogLevel::DEBUG;
         else if (arg1 == "info") LOG_LEVEL = LogLevel::INFO;
@@ -143,7 +143,7 @@ static void run() {
             } break;
 
             case (TEST_MOVE_GEN): {
-                std::cout << "$Enter depth (disabled for now)\n> ";
+                std::cout << "$Enter depth\n> ";
                 getline(std::cin, in);
 
                 if (in[0] == '$') { // commands

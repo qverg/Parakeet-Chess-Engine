@@ -31,6 +31,7 @@ void printMoveCounter(const MoveCounter& counter, const int depth) {
     std::cout << "En passant:" << counter.enPassant << std::endl;
     std::cout << "Castles:   " << counter.castles << std::endl;
     std::cout << "Promotions:" << counter.promotions << std::endl;
+    std::cout << "Checks:    " << counter.checks << std::endl;
     std::cout << std::endl;
 }
 
@@ -41,8 +42,8 @@ void Engine::countMoves(int depth) {
     }
     countMoves(board, countersPerDepth, depth);
 
-    for (; depth > 0; depth--) {
-        printMoveCounter(countersPerDepth[depth], depth);
+    for (int i = depth; i > 0; i--) {
+        printMoveCounter(countersPerDepth[i], depth-i+1);
     }
 }
 
@@ -61,6 +62,7 @@ void Engine::countMoves(Board& board, std::unordered_map<int, MoveCounter>& coun
                 if (move.isEnPassant()) counter.enPassant++;
                 if (move.isCastle()) counter.castles++;
                 if (move.promotion) counter.promotions++;
+                if (move.willBeCheck) counter.checks++;
 
                 if (depth > 1) {
                     Board newBoard = board;
