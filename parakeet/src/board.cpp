@@ -176,7 +176,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     if (position[newSquare].type == PieceType::EMPTY) {
                         addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
                     } else if (position[newSquare].side == opponent) {
-                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
+                        addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, true, false);
                     }
                 }
             }
@@ -249,25 +249,20 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             // pawn moves
             int forwardOffset;
 
-            // min and max are exclusive!
             bool squareBeforeLastTwoRanks;
             unsigned short homeRank;
             unsigned short enPassantRank;
-
-            Side opponent;
 
             if (piece->side == Side::WHITE) {
                 forwardOffset = 8;
                 squareBeforeLastTwoRanks = (square < 48);
                 homeRank = 1;
                 enPassantRank = 4;
-                opponent = Side::BLACK;
             } else {
                 forwardOffset = -8;
                 squareBeforeLastTwoRanks = (square > 15);
                 homeRank = 6;
                 enPassantRank = 3;
-                opponent = Side::WHITE;
             }
 
             if (position[square+forwardOffset].type == PieceType::EMPTY) {
@@ -329,7 +324,7 @@ void Board::addMoveIfAcceptable(
     Piece* piece = &position[move.before];
     std::unordered_map<Side, bool> checksIfMove;
     getChecksIfMove(checksIfMove, move.before, move.after, *piece, isKing, isKnight, enPassant);
-    
+
     if (checksIfMove[piece->side]) return;  // we can't put ourselves in check
 
     if (isKing && move.special1) {
@@ -362,32 +357,32 @@ void Board::addMoveIfAcceptable(
 
 void Board::addAllPromotionsIfAcceptable(
     std::vector<Move>& moves,
-    Move move, // in the form {before, after, capture} (not by reference because rvalues need to be possible)
+    const Move move, // in the form {before, after, capture} (not by reference because rvalues need to be possible)
     const Side& opponent
     ) {
 
-    Piece* piece = &position[move.before];
+    Side& side = position[move.before].side;
 
     std::array<Piece, 64> queenPromo;
-    makeHypotheticalMoveInPosition(position, queenPromo, move.before, move.after, {PieceType::QUEEN, piece->side});
+    makeHypotheticalMoveInPosition(position, queenPromo, move.before, move.after, {PieceType::QUEEN, side});
 
     // check if we're not putting ourselves in check
-    if (sideInCheck(piece->side, queenPromo, kingsData.positions, kingsData.knightAttacks)) return;
+    if (sideInCheck(side, queenPromo, kingsData.positions, kingsData.knightAttacks, true)) return;
 
 
     std::array<Piece, 64> rookPromo;
     std::array<Piece, 64> bishopPromo;
     std::array<Piece, 64> knightPromo;
 
-    makeHypotheticalMoveInPosition(position, rookPromo, move.before, move.after, {PieceType::ROOK, piece->side});
-    makeHypotheticalMoveInPosition(position, bishopPromo, move.before, move.after, {PieceType::BISHOP, piece->side});
-    makeHypotheticalMoveInPosition(position, knightPromo, move.before, move.after, {PieceType::KNIGHT, piece->side});
+    makeHypotheticalMoveInPosition(position, rookPromo, move.before, move.after, {PieceType::ROOK, side});
+    makeHypotheticalMoveInPosition(position, bishopPromo, move.before, move.after, {PieceType::BISHOP, side});
+    makeHypotheticalMoveInPosition(position, knightPromo, move.before, move.after, {PieceType::KNIGHT, side});
 
     moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 1,       // these casts are scuffed but oh well I mean they're ints anyway surely the compiler gets rid of this
         sideInCheck(opponent, queenPromo, kingsData.positions, kingsData.knightAttacks));   // queen promo
 
     moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 0, 0,
-        sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks));  // knight promo
+        sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks, true));  // knight promo
 
     moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 0,
         sideInCheck(opponent, rookPromo, kingsData.positions, kingsData.knightAttacks));    // rook promo
@@ -396,6 +391,26 @@ void Board::addAllPromotionsIfAcceptable(
         sideInCheck(opponent, bishopPromo, kingsData.positions, kingsData.knightAttacks));  // bishop promo
 
     // (see https://www.chessprogramming.org/Encoding_Moves)
+}
+
+// Just makes before empty and after the new piece
+void Board::makeHypotheticalMoveInPosition(
+        const std::array<Piece, 64>& oldPosition,
+        std::array<Piece, 64>& newPosition,
+        const unsigned int before,
+        const unsigned int after,
+        const Piece piece,
+        const bool enPassant
+    ) {
+    
+    newPosition = oldPosition;
+    newPosition[after] = piece;
+    newPosition[before] = EMPTY_SQUARE;
+
+    if (enPassant) {
+        if (after-before == 9 || after-before == -7) newPosition[before+1] = EMPTY_SQUARE;
+        else if (after-before == 7 || after-before == -9) newPosition[before-1] = EMPTY_SQUARE;
+    }
 }
 
 bool Board::getChecksIfMove(
@@ -424,9 +439,9 @@ bool Board::getChecksIfMove(
         checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
     } else {
         checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingsData.positions,
-            kingsData.knightAttacks, (isKnight && piece.side == Side::BLACK));
+            kingsData.knightAttacks, true);
         checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingsData.positions,
-            kingsData.knightAttacks, (isKnight && piece.side == Side::WHITE));
+            kingsData.knightAttacks, true);
     }
 }
 
@@ -515,7 +530,7 @@ bool Board::sideInCheck(
     
     Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
-    // Checking only for opponent built in to lambda!
+    // Checking only for opponent is built in to the following lambda!
     auto checkForPieceAtCoord = [&](Coordinate coord, PieceType type) {
         if (WITHIN_BOUNDS(coord)) {
             const Piece* piece_at_coord = &position[COORD_TO_SQUARE(coord)];
@@ -616,22 +631,3 @@ bool Board::pawnAttackingOppKingAtCoord(const Coordinate& pawnCoord, const Side&
     return false;
 }
 
-// Just makes before empty and after the new piece
-void Board::makeHypotheticalMoveInPosition(
-        const std::array<Piece, 64>& oldPosition,
-        std::array<Piece, 64>& newPosition,
-        const unsigned int before,
-        const unsigned int after,
-        const Piece piece,
-        const bool enPassant
-    ) {
-    
-    newPosition = oldPosition;
-    newPosition[after] = piece;
-    newPosition[before] = EMPTY_SQUARE;
-
-    if (enPassant) {
-        if (after-before == 9 || after-before == -7) newPosition[before+1] = EMPTY_SQUARE;
-        else if (after-before == 7 || after-before == -9) newPosition[before-1] = EMPTY_SQUARE;
-    }
-}

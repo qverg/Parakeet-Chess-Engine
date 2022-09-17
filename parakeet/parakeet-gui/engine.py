@@ -2,7 +2,7 @@ from pexpect import popen_spawn
 
 class Engine:
     def __init__(self, file_path: str, starting_pos_fen: str = None):
-        self.analyzer = popen_spawn.PopenSpawn(file_path, encoding="utf-8")
+        self.analyzer = popen_spawn.PopenSpawn([file_path, "debug"], encoding="utf-8")
         self.analyzer.expect(".+")
         print(self.analyzer.after)
 
