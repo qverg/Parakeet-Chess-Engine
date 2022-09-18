@@ -48,6 +48,7 @@ static void run() {
      * $testmovegen     test move generation (count moves in given position)
      * $exitboard       exit the current board
      */
+
     Engine engine;
     std::unordered_map<unsigned short, std::vector<Move>> generatedMoves;
 

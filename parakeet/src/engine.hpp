@@ -25,6 +25,9 @@ public:
     Board board;
 
 private:
+
+    std::unordered_map<PieceType, int> pieceValues;
+
     float evaluate(const Board& board);
     void search(const Board& initialBoard);
     void countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1);

@@ -20,13 +20,16 @@ Board::Board() {
     enPassantPossible = false;
     sideToPlay = Side::WHITE;
     lastDoublePawnPush = 64;
+
+    materialDifference = 0;
 }
 
 // inefficient!! only use when time is unimportant
 Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
-    bool enPassantPossible, unsigned short lastDoublePawnPush)
-    : position(position), sideToPlay(sideToPlay), enPassantPossible(enPassantPossible), lastDoublePawnPush(lastDoublePawnPush)
+    bool enPassantPossible, unsigned short lastDoublePawnPush, int materialDifference)
+    : position(position), sideToPlay(sideToPlay), enPassantPossible(enPassantPossible),
+        lastDoublePawnPush(lastDoublePawnPush), materialDifference(materialDifference)
 {
     castlingRightsKingSide[Side::WHITE]  = whiteCanCastleKingSide;
     castlingRightsKingSide[Side::BLACK]  = blackCanCastleKingSide;
@@ -44,21 +47,36 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     check[Side::BLACK] = sideInCheck(Side::BLACK);
 }
 
+void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
+    pieceValues_ptr = &pieceValues;
+}
+
 void Board::makeMove(const Move& move) {
     Piece piece = position[move.before];    // has to be by value (no pointer!)
 
+    if (move.capture) {
+        int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
+        materialDifference += plusMinus * (*pieceValues_ptr)[position[move.after].type];
+    }
 
     if (enPassantPossible) enPassantPossible = false;
 
     if (move.promotion) {
+        int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
+        materialDifference -= plusMinus * (*pieceValues_ptr)[PieceType::PAWN];
+
         if (move.special1 && move.special0) { // queen-promotion
             piece.type = PieceType::QUEEN;
+            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::QUEEN];
         } else if (move.special1 && !move.special0) { // rook-promotion
             piece.type = PieceType::ROOK;
+            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::ROOK];
         } else if (!move.special1 && move.special0) { // bishop-promotion
             piece.type = PieceType::BISHOP;
+            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::BISHOP];
         } else if (!move.special1 && !move.special0) { // knight-promotion
             piece.type = PieceType::KNIGHT;
+            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::KNIGHT];
         }
     } else if (move.capture) {
         if (move.special0) { // en passant

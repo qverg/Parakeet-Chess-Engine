@@ -39,7 +39,12 @@ public:
     bool enPassantPossible;
     unsigned short lastDoublePawnPush; // 64 when there was no last double pawn push
 
+    int materialDifference;
+
 private:
+
+    static std::unordered_map<PieceType, int>* pieceValues_ptr;
+
     struct {
         std::unordered_map<Side, Coordinate> positions;
         std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacks;
@@ -49,7 +54,9 @@ public:
     Board();
     Board(std::array<Piece, 64>& position, Side sideToPlay,
     bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
-    bool enPassantPossible, unsigned short lastDoublePawnPush);
+    bool enPassantPossible, unsigned short lastDoublePawnPush, int materialDifference=0);
+
+    static void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
 
     void makeMove(const Move& move);
 

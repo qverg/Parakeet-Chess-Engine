@@ -5,6 +5,15 @@
 
 Engine::Engine() {
     board = Board();
+
+    pieceValues[PieceType::PAWN] = 100;
+    pieceValues[PieceType::KNIGHT] = 300;
+    pieceValues[PieceType::BISHOP] = 350;
+    pieceValues[PieceType::ROOK] = 500;
+    pieceValues[PieceType::QUEEN] = 900;
+    pieceValues[PieceType::KING] = 1000000;
+
+    board.setPieceValues(pieceValues);
 }
 
 float Engine::evaluate() {
@@ -13,7 +22,7 @@ float Engine::evaluate() {
 
 
 float Engine::evaluate(const Board& board) {
-    return 0.0f;
+    return board.materialDifference;
 }
 
 void Engine::search() {
@@ -24,6 +33,9 @@ void Engine::search(const Board& initialBoard) {
     
 }
 
+
+//==========================================================================
+// Perft stuff
 void printMoveCounter(const MoveCounter& counter, const int depth) {
     std::cout << "Depth " << depth << std::endl;
     std::cout << "Moves:     " << counter.moves << std::endl;
