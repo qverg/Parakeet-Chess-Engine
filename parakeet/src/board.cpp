@@ -33,7 +33,7 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     for (int i = 0; i < 64; i++) {
         if (position[i].type == PieceType::KING) {
             kingsData.positions[position[i].side] = SQUARE_TO_COORD(i);
-            getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(i), kingsData.knightAttacks.at(position[i].side));
+            getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(i), kingsData.knightAttacks[position[i].side]);
         }
     }
 
@@ -97,7 +97,7 @@ void Board::makeMove(const Move& move) {
     if (piece.type == PieceType::KING) {
         castlingRightsKingSide[piece.side] = false;
         castlingRightsQueenSide[piece.side] = false;
-        kingsData.positions[piece.side] = SQUARE_TO_COORD(move.after);
+        kingsData.positions[piece.side] = SQUARE_TO_COORD((int)move.after);
         getKnightAttackCoordsAtCoord(kingsData.positions[piece.side], kingsData.knightAttacks.at(piece.side));
     }
 
@@ -149,8 +149,8 @@ void Board::reset() {
     kingsData.positions[Side::WHITE] = {4,0}; 
     kingsData.positions[Side::BLACK] = {4,7};
 
-    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::WHITE), kingsData.knightAttacks.at(Side::WHITE));
-    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::BLACK), kingsData.knightAttacks.at(Side::BLACK));
+    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::WHITE), kingsData.knightAttacks[Side::WHITE]);
+    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::BLACK), kingsData.knightAttacks[Side::BLACK]);
 
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
