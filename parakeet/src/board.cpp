@@ -1,15 +1,9 @@
-#include <cmath>    // std::abs
-
 #include "board.hpp"
 #include "log.hpp"
 
 #define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
 #define SQUARE_TO_COORD(sq) {sq%8, sq/8}
-
-Coordinate Coordinate::distance(const Coordinate& c1, const Coordinate& c2) {
-    return {std::abs(c1.x-c2.x), std::abs(c1.y-c2.y)};
-}
 
 Board::Board() {
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;

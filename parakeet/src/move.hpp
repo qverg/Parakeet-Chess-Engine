@@ -1,3 +1,4 @@
+#pragma once
 
 class Move {
     /* see https://www.chessprogramming.org/Encoding_Moves */

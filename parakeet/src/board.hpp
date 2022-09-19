@@ -6,14 +6,9 @@
 #include <unordered_map>
 #include <functional>
 
-#include "types.hpp"
 #include "move.hpp"
-
-struct Coordinate {
-    int x; int y;
-
-    static Coordinate distance(const Coordinate& c1, const Coordinate& c2);
-};
+#include "types/piece.hpp"
+#include "types/coordinate.hpp"
 
 namespace dirs {
     inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
@@ -43,7 +38,7 @@ public:
 
 private:
 
-    static std::unordered_map<PieceType, int>* pieceValues_ptr;
+    std::unordered_map<PieceType, int>* pieceValues_ptr;
 
     struct {
         std::unordered_map<Side, Coordinate> positions;
@@ -56,7 +51,7 @@ public:
     bool whiteCanCastleKingSide, bool whiteCanCastleQueenSide, bool blackCanCastleKingSide, bool blackCanCastleQueenSide,
     bool enPassantPossible, unsigned short lastDoublePawnPush, int materialDifference=0);
 
-    static void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
+    void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
 
     void makeMove(const Move& move);
 

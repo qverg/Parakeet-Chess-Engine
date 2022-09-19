@@ -1,5 +1,7 @@
-#include "utility.hpp"
 #include <iostream>
+
+#include "utility.hpp"
+#include "log.hpp"
 
 static std::vector<std::string> split(std::string& text, const char& delimiter) {
     std::vector<std::string> words;
