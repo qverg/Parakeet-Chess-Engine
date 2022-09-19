@@ -29,13 +29,13 @@ private:
     std::unordered_map<PieceType, int> pieceValues;
 
     float evaluate(const Board& board);
-    void search(const Board& initialBoard);
+    void search(const Board& initialBoard, const int depth);
     void countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1);
 
 public:
     Engine();
 
     float evaluate();
-    void search();
+    void search(const int depth);
     void countMoves(const int depth=1);
 };

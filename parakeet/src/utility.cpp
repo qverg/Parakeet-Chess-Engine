@@ -93,7 +93,7 @@ void loadFEN(std::string fen, Board& board) {
         for (const char& c : piece_placement[7-rank]) {
             if (isdigit(c)) file += c-'0';
             else {
-                position[rank*8 + file] = pieceRef[c];
+                position[rank*8 + file] = pieceRef.at(c);
                 file++;
             }
         }

@@ -108,7 +108,7 @@ static void run() {
                         engine.board.generateMoves(before, possibleMoves);
                         generatedMoves[before] = possibleMoves;
                     } else {
-                        possibleMoves = generatedMoves[before];
+                        possibleMoves = generatedMoves.at(before);
                     }
 
                     for (const auto& move : possibleMoves) {
@@ -132,8 +132,8 @@ static void run() {
                     if (queriedMove.beforeAndAfterDifferent()) {
                         engine.board.makeMove(queriedMove);
                         generatedMoves.clear();
-                        if (engine.board.check[Side::WHITE]) std::cout << "CHECK white" << std::endl;
-                        if (engine.board.check[Side::BLACK]) std::cout << "CHECK black" << std::endl;
+                        if (engine.board.check.at(Side::WHITE)) std::cout << "CHECK white" << std::endl;
+                        if (engine.board.check.at(Side::BLACK)) std::cout << "CHECK black" << std::endl;
                         
                     } else {
                         Log(LogLevel::INFO, "Invalid move");

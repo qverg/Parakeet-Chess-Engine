@@ -25,12 +25,22 @@ float Engine::evaluate(const Board& board) {
     return board.materialDifference;
 }
 
-void Engine::search() {
-    search(board);
+void Engine::search(const int depth) {
+    search(board, depth);
 }
 
-void Engine::search(const Board& initialBoard) {
-    
+void Engine::search(const Board& initialBoard, const int depth) {
+    for (int square = 0; square < 64; square++) {
+        if (board.position[square].side == board.sideToPlay) {
+            std::vector<Move> moves;
+            board.generateMoves(square, moves);
+
+            for (const auto& move : moves) {
+                // do some evaluating
+                // add mat diff attribute to move!
+            }
+        }
+    }
 }
 
 
@@ -55,14 +65,14 @@ void Engine::countMoves(int depth) {
     countMoves(board, countersPerDepth, depth);
 
     for (int i = depth; i > 0; i--) {
-        printMoveCounter(countersPerDepth[i], depth-i+1);
+        printMoveCounter(countersPerDepth.at(i), depth-i+1);
     }
 }
 
 
 
 void Engine::countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth) {
-    MoveCounter& counter = countersPerDepth[depth];
+    MoveCounter& counter = countersPerDepth.at(depth);
     for (int square = 0; square < 64; square++) {
         if (board.position[square].side == board.sideToPlay) {
             std::vector<Move> moves;

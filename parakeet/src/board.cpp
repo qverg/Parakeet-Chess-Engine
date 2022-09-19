@@ -39,7 +39,7 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     for (int i = 0; i < 64; i++) {
         if (position[i].type == PieceType::KING) {
             kingsData.positions[position[i].side] = SQUARE_TO_COORD(i);
-            getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(i), kingsData.knightAttacks[position[i].side]);
+            getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(i), kingsData.knightAttacks.at(position[i].side));
         }
     }
 
@@ -56,27 +56,27 @@ void Board::makeMove(const Move& move) {
 
     if (move.capture) {
         int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
-        materialDifference += plusMinus * (*pieceValues_ptr)[position[move.after].type];
+        materialDifference += plusMinus * pieceValues_ptr->at(position[move.after].type);
     }
 
     if (enPassantPossible) enPassantPossible = false;
 
     if (move.promotion) {
         int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
-        materialDifference -= plusMinus * (*pieceValues_ptr)[PieceType::PAWN];
+        materialDifference -= plusMinus * pieceValues_ptr->at(PieceType::PAWN);
 
         if (move.special1 && move.special0) { // queen-promotion
             piece.type = PieceType::QUEEN;
-            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::QUEEN];
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::QUEEN);
         } else if (move.special1 && !move.special0) { // rook-promotion
             piece.type = PieceType::ROOK;
-            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::ROOK];
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::ROOK);
         } else if (!move.special1 && move.special0) { // bishop-promotion
             piece.type = PieceType::BISHOP;
-            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::BISHOP];
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::BISHOP);
         } else if (!move.special1 && !move.special0) { // knight-promotion
             piece.type = PieceType::KNIGHT;
-            materialDifference += plusMinus * (*pieceValues_ptr)[PieceType::KNIGHT];
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::KNIGHT);
         }
     } else if (move.capture) {
         if (move.special0) { // en passant
@@ -104,7 +104,7 @@ void Board::makeMove(const Move& move) {
         castlingRightsKingSide[piece.side] = false;
         castlingRightsQueenSide[piece.side] = false;
         kingsData.positions[piece.side] = SQUARE_TO_COORD(move.after);
-        getKnightAttackCoordsAtCoord(kingsData.positions[piece.side], kingsData.knightAttacks[piece.side]);
+        getKnightAttackCoordsAtCoord(kingsData.positions[piece.side], kingsData.knightAttacks.at(piece.side));
     }
 
     if (piece.side == Side::WHITE) {
@@ -155,8 +155,8 @@ void Board::reset() {
     kingsData.positions[Side::WHITE] = {4,0}; 
     kingsData.positions[Side::BLACK] = {4,7};
 
-    getKnightAttackCoordsAtCoord(kingsData.positions[Side::WHITE], kingsData.knightAttacks[Side::WHITE]);
-    getKnightAttackCoordsAtCoord(kingsData.positions[Side::BLACK], kingsData.knightAttacks[Side::BLACK]);
+    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::WHITE), kingsData.knightAttacks.at(Side::WHITE));
+    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::BLACK), kingsData.knightAttacks.at(Side::BLACK));
 
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
@@ -166,18 +166,18 @@ void Board::reset() {
 }
 
 void Board::generateMoves(const unsigned short square, std::vector<Move>& moves) {
-    Piece* piece = &position[square];
-    if (piece->side != sideToPlay) {
+    Piece& piece = position[square];
+    if (piece.side != sideToPlay) {
         return;
     }
 
     Log(LogLevel::DEBUG, "Generating moves");
 
-    Side opponent = (piece->side == Side::WHITE) ? Side::BLACK : Side::WHITE;
+    Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
     Coordinate c = SQUARE_TO_COORD(square);
 
-    switch(piece->type) {
+    switch(piece.type) {
         case PieceType::EMPTY:
             break;
 
@@ -198,15 +198,15 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     }
                 }
             }
-            if (!check[piece->side]) {
-                if (castlingRightsKingSide[piece->side] 
+            if (!check.at(piece.side)) {
+                if (castlingRightsKingSide[piece.side] 
                     && position[square+1].type == PieceType::EMPTY
                     && position[square+2].type == PieceType::EMPTY) {
                     
                     addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true); // king-side castle
                 }
 
-                if (castlingRightsQueenSide[piece->side] 
+                if (castlingRightsQueenSide.at(piece.side) 
                     && position[square-1].type == PieceType::EMPTY
                     && position[square-2].type == PieceType::EMPTY
                     && position[square-3].type == PieceType::EMPTY) {
@@ -271,7 +271,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             unsigned short homeRank;
             unsigned short enPassantRank;
 
-            if (piece->side == Side::WHITE) {
+            if (piece.side == Side::WHITE) {
                 forwardOffset = 8;
                 squareBeforeLastTwoRanks = (square < 48);
                 homeRank = 1;
@@ -339,11 +339,11 @@ void Board::addMoveIfAcceptable(
     const bool enPassant
     ) {
 
-    Piece* piece = &position[move.before];
+    Piece& piece = position[move.before];
     std::unordered_map<Side, bool> checksIfMove;
-    getChecksIfMove(checksIfMove, move.before, move.after, *piece, isKing, isKnight, enPassant);
+    getChecksIfMove(checksIfMove, move.before, move.after, piece, isKing, isKnight, enPassant);
 
-    if (checksIfMove[piece->side]) return;  // we can't put ourselves in check
+    if (checksIfMove.at(piece.side)) return;  // we can't put ourselves in check
 
     if (isKing && move.special1) {
 
@@ -352,21 +352,21 @@ void Board::addMoveIfAcceptable(
         else duringCastleSquare = move.after+1;                 // queen-side castle
         
         std::array<Piece, 64> duringCastle;
-        makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, *piece);
+        makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, piece);
 
         Coordinate afterCoord = SQUARE_TO_COORD(duringCastleSquare);
 
         std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
-        kingPositions[piece->side] = afterCoord;
+        kingPositions[piece.side] = afterCoord;
 
         std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
-        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings[piece->side]);
+        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings.at(piece.side));
 
-        if (sideInCheck(piece->side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
+        if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
     }
 
 
-    if (checksIfMove[opponent])
+    if (checksIfMove.at(opponent))
         move.willBeCheck = true;
     
     moves.emplace_back(move);
@@ -451,7 +451,7 @@ bool Board::getChecksIfMove(
         kingPositions[piece.side] = afterCoord;
 
         std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
-        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings[piece.side]);
+        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings.at(piece.side));
 
         checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
         checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
@@ -544,7 +544,7 @@ bool Board::sideInCheck(
     /* We check for knight positions and cast rays around the king*/
     Log(LogLevel::INFO, "Checking for check!"); // Leaving this here to optimise when we're looking for checks later
 
-    Coordinate king_pos = kingPositions[side];
+    Coordinate& king_pos = kingPositions.at(side);
     
     Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
@@ -563,7 +563,7 @@ bool Board::sideInCheck(
         std::array<Coordinate, 8> candidates;
         getKnightAttackCoordsAtCoord(king_pos, candidates);
 
-        for (Coordinate& candidate : knightAttacksAroundKings[side]) {
+        for (Coordinate& candidate : knightAttacksAroundKings.at(side)) {
             if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
         }
     }
@@ -637,12 +637,12 @@ void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coo
 
 bool Board::pawnAttackingOppKingAtCoord(const Coordinate& pawnCoord, const Side& pawnSide) {
     if (pawnSide == Side::WHITE) {
-        Coordinate kingCoord = kingsData.positions[Side::BLACK];
+        Coordinate& kingCoord = kingsData.positions.at(Side::BLACK);
         if (kingCoord.y == pawnCoord.y + 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
                 return true;
 
     } else {
-        Coordinate kingCoord = kingsData.positions[Side::WHITE];
+        Coordinate& kingCoord = kingsData.positions.at(Side::WHITE);
         if (kingCoord.y == pawnCoord.y - 1 && (kingCoord.x == pawnCoord.x+1 || kingCoord.x == pawnCoord.x-1))
                 return true;
     }
