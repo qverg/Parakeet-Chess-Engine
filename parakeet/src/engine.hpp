@@ -13,12 +13,14 @@ private:
 
     float evaluate(const Board& board);
     void search(const Board& initialBoard, const int depth);
-    void countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1);
+    
+    void countMoves(const Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1) const;
 
 public:
     Engine();
 
     float evaluate();
     void search(const int depth);
-    void countMoves(const int depth=1);
+
+    void countMoves(const int depth=1) const;
 };

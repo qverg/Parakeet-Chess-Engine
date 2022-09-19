@@ -57,18 +57,18 @@ public:
 
     void reset();
 
-    void generateMoves(const unsigned short square, std::vector<Move>& moves);
+    void generateMoves(const unsigned short square, std::vector<Move>& moves) const;
 
     std::string getPositionString() const;
 
-    bool sideInCheck(const Side& side, const bool includeKnights=true);
-    static bool sideInCheck(
+    bool sideInCheck(const Side& side, const bool includeKnights=true) const;
+    bool sideInCheck(
         const Side& side,
         const std::array<Piece, 64>& position,
-        std::unordered_map<Side, Coordinate>& kingPositions,
-        std::unordered_map<Side, std::array<Coordinate, 8>>& knightAttacksAroundKings,
+        const std::unordered_map<Side, Coordinate>& kingPositions,
+        const std::unordered_map<Side, std::array<Coordinate, 8>>& knightAttacksAroundKings,
         const bool includeKnights = false
-    );
+    ) const;
 
 private:
     void generateMovesInDirection(
@@ -76,7 +76,7 @@ private:
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
         const Side& opponent
-    );
+    ) const;
 
     PieceType getNextOpponentPieceInDirection(
         const Coordinate& coord,
@@ -84,25 +84,23 @@ private:
         const Side& opponent
     ) const;
 
-    static PieceType getNextOpponentPieceInDirection(
+    PieceType getNextOpponentPieceInDirection(
         const Coordinate& coord,
         const std::array<Piece, 64>& position,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         const Side& opponent
-    );
+    ) const;
 
-    static void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coordinate, 8>& attacks);
+    void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coordinate, 8>& attacks) const;
 
-    bool pawnAttackingOppKingAtCoord(const Coordinate& pawnCoord, const Side& pawnSide);
-
-    static void makeHypotheticalMoveInPosition(
+    void makeHypotheticalMoveInPosition(
         const std::array<Piece, 64>& oldPosition,
         std::array<Piece, 64>& newPosition,
         const unsigned int before,
         const unsigned int after,
         const Piece piece,
         const bool enPassant = false
-    );
+    ) const;
 
     bool getChecksIfMove(
         std::unordered_map<Side, bool>& checks,
@@ -112,7 +110,7 @@ private:
         const bool isKing = false,
         const bool isKnight = false,
         const bool enPassant = false
-        );
+        ) const;
 
     // Adds move to moves if it doesn't place the moving side in check. Also adjusts willBeCheck in move.
     void addMoveIfAcceptable(
@@ -122,14 +120,14 @@ private:
         const bool isKing = false,
         const bool isKnight = false,
         const bool enPassant = false
-    );
+    ) const;
 
     // Adds all promotions if pawn move acceptable
     void addAllPromotionsIfAcceptable(
         std::vector<Move>& moves,
         Move move, // in the form {before, after, capture}
         const Side& opponent
-    );
+    ) const;
 
 
 };

@@ -57,7 +57,7 @@ void printMoveCounter(const MoveCounter& counter, const int depth) {
     std::cout << std::endl;
 }
 
-void Engine::countMoves(int depth) {
+void Engine::countMoves(const int depth) const {
     std::unordered_map<int, MoveCounter> countersPerDepth;
     for (int i = depth; i > 0; i--) {
         countersPerDepth[i] = MoveCounter();
@@ -71,7 +71,7 @@ void Engine::countMoves(int depth) {
 
 
 
-void Engine::countMoves(Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth) {
+void Engine::countMoves(const Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth) const {
     MoveCounter& counter = countersPerDepth.at(depth);
     for (int square = 0; square < 64; square++) {
         if (board.position[square].side == board.sideToPlay) {
