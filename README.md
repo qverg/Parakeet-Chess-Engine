@@ -1,15 +1,17 @@
 # Parakeet Chess Engine
 
 ### Requirements:
- - Windows
+ - Windows probably, not tested on other OSs but might work
+ - I'm using g++ to compile (C++ 14 or higher).
+
+For the gui (not necessary for just running the engine):
+ - Definitely windows
  - Python 3 (I'm using 3.10)
     - pygame
     - pexpect
 
-I'm using g++ to compile.
-
-### Run using the GUI
-Compile using ``./compile`` (batch file -- adjust if needed) inside parakeet/parakeet-gui and run using ``./run`` in the same directory.
-
 ### Running just the engine
-Compile using ``./compile`` inside parakeet/src and run using ``./parakeet``.
+Compile using ``.\compile.bat`` inside parakeet/src and run using ``.\parakeet.exe``.
+
+### Running the GUI
+Compile using ``.\compile.bat`` inside parakeet/parakeet-gui and run using ``.\run.bat``.
