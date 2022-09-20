@@ -88,17 +88,6 @@ void Engine::play() {
 
 //==========================================================================
 // Perft stuff
-void printMoveCounter(const MoveCounter& counter, const int depth) {
-    std::cout << "Depth " << depth << std::endl;
-    std::cout << "Moves:     " << counter.moves << std::endl;
-    std::cout << "Captures:  " << counter.captures << std::endl;
-    std::cout << "En passant:" << counter.enPassant << std::endl;
-    std::cout << "Castles:   " << counter.castles << std::endl;
-    std::cout << "Promotions:" << counter.promotions << std::endl;
-    std::cout << "Checks:    " << counter.checks << std::endl;
-    std::cout << std::endl;
-}
-
 void Engine::countMoves(const int depth) const {
     std::unordered_map<int, MoveCounter> countersPerDepth;
     for (int i = depth; i > 0; i--) {
@@ -107,7 +96,7 @@ void Engine::countMoves(const int depth) const {
     countMoves(board, countersPerDepth, depth);
 
     for (int i = depth; i > 0; i--) {
-        printMoveCounter(countersPerDepth.at(i), depth-i+1);
+        countersPerDepth.at(i).print(depth-i+1);
     }
 }
 

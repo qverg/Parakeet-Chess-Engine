@@ -9,4 +9,6 @@ struct MoveCounter {
     int checks = 0;
 
     void operator+=(const MoveCounter& counter);
+    void print(const int depth) const;
 };
+
