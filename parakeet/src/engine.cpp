@@ -1,7 +1,9 @@
 #include "engine.hpp"
+#include "log.hpp"
 
 #include <vector>
 #include <iostream>
+//#include <algorithm>    // std::max
 
 Engine::Engine() {
     board = Board();
@@ -16,30 +18,80 @@ Engine::Engine() {
     board.setPieceValues(pieceValues);
 }
 
-float Engine::evaluate() {
-    evaluate(board);
+int Engine::evaluate() const {
+    return evaluate(board);
 }
 
 
-float Engine::evaluate(const Board& board) {
-    return board.materialDifference;
+int Engine::evaluate(const Board& board) const{
+    if (board.sideToPlay == Side::WHITE)
+        return board.materialDifference;
+
+    return -board.materialDifference;
 }
 
-void Engine::search(const int depth) {
-    search(board, depth);
+int Engine::search(Move& bestMove, const int depth) const {
+    return search(board, bestMove, depth, -infinity, infinity);
 }
 
-void Engine::search(const Board& initialBoard, const int depth) {
+int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, int alpha, const int beta) const {
+    
+    Log(LogLevel::DEBUG, "Depth is:");
+    Log(LogLevel::DEBUG, depth);
+    if (depth == 0) return evaluate(initialBoard);
+    
+    
+    std::vector<Move> moves;
     for (int square = 0; square < 64; square++) {
-        if (board.position[square].side == board.sideToPlay) {
-            std::vector<Move> moves;
-            board.generateMoves(square, moves);
+        if (initialBoard.position[square].side == initialBoard.sideToPlay){
+            std::vector<Move> movesAtSquare;
+            initialBoard.generateMoves(square, movesAtSquare);
 
-            for (const auto& move : moves) {
-                // do some evaluating
-                // add mat diff attribute to move!
-            }
+            // insert movesAtSquare at the end of moves
+            moves.reserve(moves.size() + distance(movesAtSquare.begin(),movesAtSquare.end()));
+            moves.insert(moves.end(),movesAtSquare.begin(),movesAtSquare.end());
         }
+    }
+
+    if (moves.size() == 0) {
+        if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
+        Log(LogLevel::DEBUG, "Stalemate found");
+        return 0;
+    }
+
+    for (const auto& move : moves) {
+        Board newBoard = initialBoard;
+        newBoard.makeMove(move);
+
+        Move tempMove;
+        const int eval = -search(newBoard, tempMove, depth-1, -beta, -alpha);
+        Log(LogLevel::DEBUG, alpha);
+        Log(LogLevel::DEBUG, beta);
+        Log(LogLevel::DEBUG, eval);
+
+        if (eval >= beta) {
+            return beta;
+        }
+        if (eval > alpha) {
+            alpha = eval;
+            bestMove = move;
+        }
+    }
+
+    return alpha;
+}
+
+void Engine::play() {
+
+    Move bestMove;
+    if (board.sideToPlay == Side::WHITE)
+        const int eval = search(bestMove, 4);
+    else const int eval = -search(bestMove, 4);
+
+    if (bestMove.beforeAndAfterDifferent()) {
+        board.makeMove(bestMove);
+    } else {
+        Log(LogLevel::INFO, "No moves found");
     }
 }
 

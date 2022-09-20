@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include "board.hpp"
 #include "types/movecounter.hpp"
 
@@ -11,16 +13,29 @@ private:
 
     std::unordered_map<PieceType, int> pieceValues;
 
-    float evaluate(const Board& board);
-    void search(const Board& initialBoard, const int depth);
+    const int infinity = 1000000;
+
+    int evaluate(const Board& board) const;
+    int search(
+        const Board& initialBoard,
+        Move& bestMove,
+        const int depth,
+        int alpha,
+        const int beta
+    ) const;
     
-    void countMoves(const Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth=1) const;
+    void countMoves(
+        const Board& board,
+        std::unordered_map<int, MoveCounter>& countersPerDepth,
+        const int depth=1
+    ) const;
 
 public:
     Engine();
 
-    float evaluate();
-    void search(const int depth);
+    int evaluate() const;
+    int search(Move& bestMove, const int depth) const;
+    void play();
 
     void countMoves(const int depth=1) const;
 };

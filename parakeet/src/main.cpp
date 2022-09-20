@@ -97,6 +97,8 @@ static void run() {
                         mode = BEGIN;
                     } else if (in == "$getposition") {
                         std::cout << getPositionString(engine.board) << std::endl;
+                    } else if (in == "$play") {
+                        engine.play();
                     }
                     
                 } else {    // move given
