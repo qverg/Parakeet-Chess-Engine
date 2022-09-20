@@ -56,7 +56,7 @@ void Board::makeMove(const Move& move) {
     if (enPassantPossible) enPassantPossible = false;
 
     if (move.promotion) {
-        int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
+        const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
         materialDifference -= plusMinus * pieceValues_ptr->at(PieceType::PAWN);
 
         if (move.special1 && move.special0) { // queen-promotion
@@ -183,7 +183,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
             };
 
             for (Coordinate& candidate : candidates) {
-                unsigned short newSquare = COORD_TO_SQUARE(candidate);
+                const unsigned short newSquare = COORD_TO_SQUARE(candidate);
                 if (WITHIN_BOUNDS(candidate)) {
                     if (position[newSquare].type == PieceType::EMPTY) {
                         addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
@@ -240,7 +240,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
             for (Coordinate& candidate : candidates) {
                 if (WITHIN_BOUNDS(candidate)) {
-                    unsigned short newSquare = COORD_TO_SQUARE(candidate);
+                    const unsigned short newSquare = COORD_TO_SQUARE(candidate);
                     if (position[newSquare].type == PieceType::EMPTY) {
                         addMoveIfAcceptable(moves, {square, newSquare}, opponent, false, true);
                     } else if (position[newSquare].side == opponent) {
@@ -279,7 +279,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
             if (position[square+forwardOffset].type == PieceType::EMPTY) {
                 if (squareBeforeLastTwoRanks) {
-                    Move move = {square, square+forwardOffset};
+                    const Move move = {square, square+forwardOffset};
                     addMoveIfAcceptable(moves, move, opponent);   // single pawn push
                     if (square / 8 == homeRank && position[square+forwardOffset*2].type == PieceType::EMPTY) {
                         addMoveIfAcceptable(moves, {square, square+forwardOffset*2, 0, 0, 0, 1}, opponent); // double pawn push
@@ -501,23 +501,20 @@ PieceType Board::getNextOpponentPieceInDirection(
         const Side& opponent
     ) const {
     
-    unsigned short nextSquare;
-    Coordinate nextCoord;
-    Coordinate lastCoord = coord;
+    Coordinate nextCoord = coord;
 
     for (int i = 1; i < 8; i++) {
-        nextCoord = directionFunc(lastCoord);
+        nextCoord = directionFunc(nextCoord);
 
         if (WITHIN_BOUNDS(nextCoord)) {
-            nextSquare = COORD_TO_SQUARE(nextCoord);
-            PieceType nextType = position[nextSquare].type;
+            const unsigned short nextSquare = COORD_TO_SQUARE(nextCoord);
+            const PieceType nextType = position[nextSquare].type;
 
             if (position[nextSquare].side == opponent) { // capture
                 return nextType;
             } else if (nextType != PieceType::EMPTY) break;
 
         } else break;
-        lastCoord = nextCoord;
     }
 
     return PieceType::EMPTY;
