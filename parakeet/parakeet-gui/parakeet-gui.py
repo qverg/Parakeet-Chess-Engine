@@ -116,6 +116,7 @@ def main():
 
     # $play button
     play_button_coords = (board_size + 50, 50, 100, 100)
+    clicked = False
 
     # main loop
     running = True
@@ -130,9 +131,12 @@ def main():
 
         # Draw $play button
         pygame.draw.rect(screen, (255, 255, 255), play_button_coords)
-        if pygame.mouse.get_pressed()[0] and coords_within_rect(pygame.mouse.get_pos(), play_button_coords):
+        if pygame.mouse.get_pressed()[0] and coords_within_rect(pygame.mouse.get_pos(), play_button_coords) and not clicked:
             parakeet.play()
             match_position(board_position, parakeet)
+            clicked = True
+        if not pygame.mouse.get_pressed()[0] and clicked:
+            clicked = False
 
         #==========================================================================================
         # Piece movement with mouse
