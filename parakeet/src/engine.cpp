@@ -35,26 +35,14 @@ int Engine::search(Move& bestMove, const int depth) const {
 }
 
 int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, int alpha, const int beta) const {
-    
-    Log(LogLevel::DEBUG, "Depth is:");
-    Log(LogLevel::DEBUG, depth);
     if (depth == 0) return evaluate(initialBoard);
     
     
     std::vector<Move> moves;
-    for (int square = 0; square < 64; square++) {
-        if (initialBoard.position[square].side == initialBoard.sideToPlay){
-            std::vector<Move> movesAtSquare;
-            initialBoard.generateMoves(square, movesAtSquare);
-
-            // insert movesAtSquare at the end of moves
-            moves.reserve(moves.size() + distance(movesAtSquare.begin(),movesAtSquare.end()));
-            moves.insert(moves.end(),movesAtSquare.begin(),movesAtSquare.end());
-        }
-    }
+    board.generateAllMoves(moves);
 
     if (moves.size() == 0) {
-        if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
+        //if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
         Log(LogLevel::DEBUG, "Stalemate found");
         return 0;
     }
@@ -65,9 +53,6 @@ int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, i
 
         Move tempMove;
         const int eval = -search(newBoard, tempMove, depth-1, -beta, -alpha);
-        Log(LogLevel::DEBUG, alpha);
-        Log(LogLevel::DEBUG, beta);
-        Log(LogLevel::DEBUG, eval);
 
         if (eval >= beta) {
             return beta;
@@ -84,9 +69,14 @@ int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, i
 void Engine::play() {
 
     Move bestMove;
+
+    Log(LogLevel::DEBUG, "Starting search");
+
     if (board.sideToPlay == Side::WHITE)
-        const int eval = search(bestMove, 4);
-    else const int eval = -search(bestMove, 4);
+        const int eval = search(bestMove, 5);
+    else const int eval = -search(bestMove, 5);
+
+    Log(LogLevel::DEBUG, "Search complete");
 
     if (bestMove.beforeAndAfterDifferent()) {
         board.makeMove(bestMove);

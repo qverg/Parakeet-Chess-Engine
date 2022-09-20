@@ -330,6 +330,19 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
     //Log(LogLevel::DEBUG, "Move generation done");
 }
 
+void Board::generateAllMoves(std::vector<Move>& moves) const {
+    for (int square = 0; square < 64; square++) {
+        if (position[square].side == sideToPlay) {
+            std::vector<Move> movesAtSquare;
+            generateMoves(square, movesAtSquare);
+
+            // insert movesAtSquare at the end of moves
+            moves.reserve(moves.size() + distance(movesAtSquare.begin(),movesAtSquare.end()));
+            moves.insert(moves.end(),movesAtSquare.begin(),movesAtSquare.end());
+        }
+    }
+}
+
 void Board::addMoveIfAcceptable(
     std::vector<Move>& moves,
     Move move,

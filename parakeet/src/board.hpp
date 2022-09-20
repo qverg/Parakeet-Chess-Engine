@@ -58,6 +58,7 @@ public:
     void reset();
 
     void generateMoves(const unsigned short square, std::vector<Move>& moves) const;
+    void generateAllMoves(std::vector<Move>& moves) const;
 
     std::string getPositionString() const;
 
