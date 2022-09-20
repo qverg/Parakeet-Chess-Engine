@@ -79,6 +79,9 @@ def find_a_piece(piece_type: str, board_position: list):
                 return i
     return None
 
+def coords_within_rect(coords: tuple[int, int], rect: tuple[int, int, int, int]) -> bool:
+    return (coords[0] > rect[0] and coords[0] < rect[0]+rect[2] and coords[1] > rect[1] and coords[1] < rect[1]+rect[3])
+
 def main():
     pygame.init()
 
@@ -111,6 +114,9 @@ def main():
     check_black = False
     check_white = False
 
+    # $play button
+    play_button_coords = (board_size + 50, 50, 100, 100)
+
     # main loop
     running = True
     while running:  #========================== MAIN LOOP ==========================#
@@ -121,6 +127,12 @@ def main():
             for j in range(4):
                 pygame.draw.rect(screen, (223, 167, 0), 
                     ((1-i%2)*square_size + j*square_size*2, i*square_size, square_size, square_size))
+
+        # Draw $play button
+        pygame.draw.rect(screen, (255, 255, 255), play_button_coords)
+        if pygame.mouse.get_pressed()[0] and coords_within_rect(pygame.mouse.get_pos(), play_button_coords):
+            parakeet.play()
+            match_position(board_position, parakeet)
 
         #==========================================================================================
         # Piece movement with mouse
