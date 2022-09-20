@@ -1,8 +1,9 @@
 from pexpect import popen_spawn
+from time import sleep
 
 class Engine:
     def __init__(self, file_path: str, starting_pos_fen: str = None):
-        self.analyzer = popen_spawn.PopenSpawn([file_path, "debug"], encoding="utf-8")
+        self.analyzer = popen_spawn.PopenSpawn(file_path, encoding="utf-8")
         self.analyzer.expect(".+")
         print(self.analyzer.after)
 
@@ -21,7 +22,7 @@ class Engine:
         """Skips whatever the engine has to say."""
         self.analyzer.expect(".+")
         
-        print(self.analyzer.after)
+        return self.analyzer.after
 
     def reset_board(self):
         """Resets the board to the starting position."""
@@ -60,4 +61,9 @@ class Engine:
     def last_communication(self):
         return self.analyzer.after
 
+    def play(self):
+        """Plays the best move according to the engine."""
+        print("Sending $play")
+        self.analyzer.sendline("$play")
+        print(self.skip())
         
