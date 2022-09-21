@@ -42,7 +42,7 @@ private:
 
     struct {
         std::unordered_map<Side, Coordinate> positions;
-        std::unordered_map<Side, std::vector<Coordinate>> knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>*> knightAttacks;
     } kingsData;
 
 public:
@@ -67,7 +67,7 @@ public:
         const Side& side,
         const std::array<Piece, 64>& position,
         const std::unordered_map<Side, Coordinate>& kingPositions,
-        const std::unordered_map<Side, std::vector<Coordinate>>& knightAttacksAroundKings,
+        const std::unordered_map<Side, std::vector<Coordinate>*>& knightAttacksAroundKings,
         const bool includeKnights = false
     ) const;
 

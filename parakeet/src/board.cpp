@@ -35,7 +35,7 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     for (int i = 0; i < 64; i++) {
         if (position[i].type == PieceType::KING) {
             kingsData.positions[position[i].side] = SQUARE_TO_COORD(i);
-            kingsData.knightAttacks[position[i].side] = knightAttacksAtCoord[i];
+            kingsData.knightAttacks[position[i].side] = &knightAttacksAtCoord[i];
         }
     }
 
@@ -102,7 +102,7 @@ void Board::makeMove(const Move& move) {
         castlingRightsQueenSide[piece.side] = false;
         kingsData.positions[piece.side] = SQUARE_TO_COORD((int)move.after);
         //Log(LogLevel::DEBUG, "line 101");
-        kingsData.knightAttacks.at(piece.side) = knightAttacksAtCoord[move.after];
+        kingsData.knightAttacks.at(piece.side) = &knightAttacksAtCoord[move.after];
     }
 
     if (piece.side == Side::WHITE) {
@@ -154,8 +154,8 @@ void Board::reset() {
     kingsData.positions[Side::BLACK] = {4,7};
 
     //Log(LogLevel::DEBUG, "line 154&155");
-    kingsData.knightAttacks[Side::WHITE] = knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::WHITE))];
-    kingsData.knightAttacks[Side::BLACK] = knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::BLACK))];
+    kingsData.knightAttacks[Side::WHITE] = &knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::WHITE))];
+    kingsData.knightAttacks[Side::BLACK] = &knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::BLACK))];
 
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
@@ -369,9 +369,9 @@ void Board::addMoveIfAcceptable(
         std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
         kingPositions[piece.side] = SQUARE_TO_COORD(duringCastleSquare);
 
-        std::unordered_map<Side, std::vector<Coordinate>> knightAttacksAroundKings = kingsData.knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>*> knightAttacksAroundKings = kingsData.knightAttacks;
         //Log(LogLevel::DEBUG, "line 362");
-        knightAttacksAroundKings.at(piece.side) = knightAttacksAtCoord[duringCastleSquare];
+        knightAttacksAroundKings.at(piece.side) = &knightAttacksAtCoord[duringCastleSquare];
 
         if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
     }
@@ -459,9 +459,9 @@ bool Board::getChecksIfMove(
         std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
         kingPositions[piece.side] = SQUARE_TO_COORD(after);
 
-        std::unordered_map<Side, std::vector<Coordinate>> knightAttacksAroundKings = kingsData.knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>*> knightAttacksAroundKings = kingsData.knightAttacks;
         //Log(LogLevel::DEBUG, "line 453");
-        knightAttacksAroundKings.at(piece.side) = knightAttacksAtCoord[after];
+        knightAttacksAroundKings.at(piece.side) = &knightAttacksAtCoord[after];
 
         checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
         checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
@@ -545,7 +545,7 @@ bool Board::sideInCheck(
     const Side& side,
     const std::array<Piece, 64>& position,
     const std::unordered_map<Side, Coordinate>& kingPositions,
-    const std::unordered_map<Side, std::vector<Coordinate>>& knightAttacksAroundKings,
+    const std::unordered_map<Side, std::vector<Coordinate>*>& knightAttacksAroundKings,
     const bool includeKnights
     ) const {
     /* We check for knight positions and cast rays around the king*/
@@ -567,7 +567,7 @@ bool Board::sideInCheck(
 
     // Look for knights
     if (includeKnights){
-        for (const Coordinate& candidate : knightAttacksAroundKings.at(side)) {
+        for (const Coordinate& candidate : *knightAttacksAroundKings.at(side)) {
             if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
         }
     }
