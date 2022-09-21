@@ -132,6 +132,5 @@ private:
 public:
     static std::array<std::vector<Coordinate>, 64> knightAttacksAtCoord;
     static void fillKnightAttacksMap();
-private: static void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::vector<Coordinate>& attacks);
 
 };

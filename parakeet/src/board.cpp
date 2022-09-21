@@ -620,9 +620,11 @@ bool Board::sideInCheck(
     return false;
 }
 
-void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::vector<Coordinate>& attacks) {
-    //Log(LogLevel::DEBUG, "getKnightAttackCoordsAtCoord");
-    const std::array<Coordinate, 8> possible = {
+void Board::fillKnightAttacksMap() {
+    for (int square = 0; square < 64; square++) {
+        const Coordinate coord = SQUARE_TO_COORD(square);
+
+        const std::array<Coordinate, 8> possible = {
                 dirs::north(dirs::north(dirs::east(coord))),
                 dirs::north(dirs::north(dirs::west(coord))),
                 dirs::north(dirs::east (dirs::east(coord))),
@@ -631,19 +633,11 @@ void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::vector<Co
                 dirs::south(dirs::south(dirs::west(coord))),
                 dirs::south(dirs::east (dirs::east(coord))),
                 dirs::south(dirs::west (dirs::west(coord)))
-    };
+        };
 
-    for (const auto& possibleCoord : possible) {
-        if (WITHIN_BOUNDS(possibleCoord))
-            attacks.push_back(possibleCoord);
-    }
-}
-
-void Board::fillKnightAttacksMap() {
-    //if (knightAttacksAtCoord.find({0,0}) == knightAttacksAtCoord.end())
-    //    Log(LogLevel::WARN, "knightAttacksAtCoord is already filled. Filling anyway...");
-
-    for (int square = 0; square < 64; square++) {
-        getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(square), knightAttacksAtCoord[square]);
+        for (const auto& possibleCoord : possible) {
+            if (WITHIN_BOUNDS(possibleCoord))
+                knightAttacksAtCoord[square].push_back(possibleCoord);
+        }
     }
 }
