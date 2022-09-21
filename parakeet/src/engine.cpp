@@ -7,7 +7,7 @@
 
 Engine::Engine() {
     board = Board();
-
+    
     pieceValues[PieceType::PAWN] = 100;
     pieceValues[PieceType::KNIGHT] = 300;
     pieceValues[PieceType::BISHOP] = 350;
@@ -16,6 +16,7 @@ Engine::Engine() {
     pieceValues[PieceType::KING] = 1000000;
 
     board.setPieceValues(pieceValues);
+    board.fillKnightAttacksMap();
 }
 
 int Engine::evaluate() const {
@@ -99,8 +100,6 @@ void Engine::countMoves(const int depth) const {
         countersPerDepth.at(i).print(depth-i+1);
     }
 }
-
-
 
 void Engine::countMoves(const Board& board, std::unordered_map<int, MoveCounter>& countersPerDepth, const int depth) const {
     MoveCounter& counter = countersPerDepth.at(depth);

@@ -5,6 +5,8 @@
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
 #define SQUARE_TO_COORD(sq) {sq%8, sq/8}
 
+std::array<std::vector<Coordinate>, 64> Board::knightAttacksAtCoord;
+
 Board::Board() {
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
@@ -33,7 +35,7 @@ Board::Board(std::array<Piece, 64>& position, Side sideToPlay,
     for (int i = 0; i < 64; i++) {
         if (position[i].type == PieceType::KING) {
             kingsData.positions[position[i].side] = SQUARE_TO_COORD(i);
-            getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(i), kingsData.knightAttacks[position[i].side]);
+            kingsData.knightAttacks[position[i].side] = knightAttacksAtCoord[i];
         }
     }
 
@@ -100,7 +102,7 @@ void Board::makeMove(const Move& move) {
         castlingRightsQueenSide[piece.side] = false;
         kingsData.positions[piece.side] = SQUARE_TO_COORD((int)move.after);
         //Log(LogLevel::DEBUG, "line 101");
-        getKnightAttackCoordsAtCoord(kingsData.positions[piece.side], kingsData.knightAttacks.at(piece.side));
+        kingsData.knightAttacks.at(piece.side) = knightAttacksAtCoord[move.after];
     }
 
     if (piece.side == Side::WHITE) {
@@ -152,8 +154,8 @@ void Board::reset() {
     kingsData.positions[Side::BLACK] = {4,7};
 
     //Log(LogLevel::DEBUG, "line 154&155");
-    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::WHITE), kingsData.knightAttacks[Side::WHITE]);
-    getKnightAttackCoordsAtCoord(kingsData.positions.at(Side::BLACK), kingsData.knightAttacks[Side::BLACK]);
+    kingsData.knightAttacks[Side::WHITE] = knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::WHITE))];
+    kingsData.knightAttacks[Side::BLACK] = knightAttacksAtCoord[COORD_TO_SQUARE(kingsData.positions.at(Side::BLACK))];
 
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
     castlingRightsQueenSide[Side::WHITE] = true;    castlingRightsQueenSide[Side::BLACK] = true;
@@ -173,7 +175,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
     Side opponent = (piece.side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
-    Coordinate c = SQUARE_TO_COORD(square);
+    const Coordinate c = SQUARE_TO_COORD(square);
 
     switch(piece.type) {
         case PieceType::EMPTY:
@@ -241,17 +243,14 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
         case PieceType::KNIGHT: {
 
             // knight moves
-            std::array<Coordinate, 8> candidates;
-            getKnightAttackCoordsAtCoord(c, candidates);
+            const std::vector<Coordinate>& candidates = knightAttacksAtCoord[square];
 
-            for (Coordinate& candidate : candidates) {
-                if (WITHIN_BOUNDS(candidate)) {
-                    const unsigned short newSquare = COORD_TO_SQUARE(candidate);
-                    if (position[newSquare].type == PieceType::EMPTY) {
-                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, false, true);
-                    } else if (position[newSquare].side == opponent) {
-                        addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, false, true);
-                    }
+            for (const Coordinate& candidate : candidates) {
+                const unsigned short newSquare = COORD_TO_SQUARE(candidate);
+                if (position[newSquare].type == PieceType::EMPTY) {
+                    addMoveIfAcceptable(moves, {square, newSquare}, opponent, false, true);
+                } else if (position[newSquare].side == opponent) {
+                    addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, false, true);
                 }
             }
         } break;
@@ -367,14 +366,12 @@ void Board::addMoveIfAcceptable(
         std::array<Piece, 64> duringCastle;
         makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, piece);
 
-        const Coordinate afterCoord = SQUARE_TO_COORD(duringCastleSquare);
-
         std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
-        kingPositions[piece.side] = afterCoord;
+        kingPositions[piece.side] = SQUARE_TO_COORD(duringCastleSquare);
 
-        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>> knightAttacksAroundKings = kingsData.knightAttacks;
         //Log(LogLevel::DEBUG, "line 362");
-        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings.at(piece.side));
+        knightAttacksAroundKings.at(piece.side) = knightAttacksAtCoord[duringCastleSquare];
 
         if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
     }
@@ -459,14 +456,12 @@ bool Board::getChecksIfMove(
     makeHypotheticalMoveInPosition(position, hypotheticalPos, before, after, piece, enPassant);
 
     if (isKing) {
-        const Coordinate afterCoord = SQUARE_TO_COORD(after);
-
         std::unordered_map<Side, Coordinate> kingPositions = kingsData.positions;
-        kingPositions[piece.side] = afterCoord;
+        kingPositions[piece.side] = SQUARE_TO_COORD(after);
 
-        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacksAroundKings = kingsData.knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>> knightAttacksAroundKings = kingsData.knightAttacks;
         //Log(LogLevel::DEBUG, "line 453");
-        getKnightAttackCoordsAtCoord(afterCoord, knightAttacksAroundKings.at(piece.side));
+        knightAttacksAroundKings.at(piece.side) = knightAttacksAtCoord[after];
 
         checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
         checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
@@ -550,7 +545,7 @@ bool Board::sideInCheck(
     const Side& side,
     const std::array<Piece, 64>& position,
     const std::unordered_map<Side, Coordinate>& kingPositions,
-    const std::unordered_map<Side, std::array<Coordinate, 8>>& knightAttacksAroundKings,
+    const std::unordered_map<Side, std::vector<Coordinate>>& knightAttacksAroundKings,
     const bool includeKnights
     ) const {
     /* We check for knight positions and cast rays around the king*/
@@ -572,9 +567,6 @@ bool Board::sideInCheck(
 
     // Look for knights
     if (includeKnights){
-        std::array<Coordinate, 8> candidates;
-        getKnightAttackCoordsAtCoord(king_pos, candidates);
-        //Log(LogLevel::DEBUG, "line 562");
         for (const Coordinate& candidate : knightAttacksAroundKings.at(side)) {
             if (checkForPieceAtCoord(candidate, PieceType::KNIGHT)) return true;
         }
@@ -628,9 +620,9 @@ bool Board::sideInCheck(
     return false;
 }
 
-void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coordinate, 8>& attacks) const {
+void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::vector<Coordinate>& attacks) {
     //Log(LogLevel::DEBUG, "getKnightAttackCoordsAtCoord");
-    attacks = {
+    const std::array<Coordinate, 8> possible = {
                 dirs::north(dirs::north(dirs::east(coord))),
                 dirs::north(dirs::north(dirs::west(coord))),
                 dirs::north(dirs::east (dirs::east(coord))),
@@ -640,4 +632,18 @@ void Board::getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coo
                 dirs::south(dirs::east (dirs::east(coord))),
                 dirs::south(dirs::west (dirs::west(coord)))
     };
+
+    for (const auto& possibleCoord : possible) {
+        if (WITHIN_BOUNDS(possibleCoord))
+            attacks.push_back(possibleCoord);
+    }
+}
+
+void Board::fillKnightAttacksMap() {
+    //if (knightAttacksAtCoord.find({0,0}) == knightAttacksAtCoord.end())
+    //    Log(LogLevel::WARN, "knightAttacksAtCoord is already filled. Filling anyway...");
+
+    for (int square = 0; square < 64; square++) {
+        getKnightAttackCoordsAtCoord(SQUARE_TO_COORD(square), knightAttacksAtCoord[square]);
+    }
 }

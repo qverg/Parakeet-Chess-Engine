@@ -42,7 +42,7 @@ private:
 
     struct {
         std::unordered_map<Side, Coordinate> positions;
-        std::unordered_map<Side, std::array<Coordinate, 8>> knightAttacks;
+        std::unordered_map<Side, std::vector<Coordinate>> knightAttacks;
     } kingsData;
 
 public:
@@ -67,7 +67,7 @@ public:
         const Side& side,
         const std::array<Piece, 64>& position,
         const std::unordered_map<Side, Coordinate>& kingPositions,
-        const std::unordered_map<Side, std::array<Coordinate, 8>>& knightAttacksAroundKings,
+        const std::unordered_map<Side, std::vector<Coordinate>>& knightAttacksAroundKings,
         const bool includeKnights = false
     ) const;
 
@@ -92,7 +92,6 @@ private:
         const Side& opponent
     ) const;
 
-    void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::array<Coordinate, 8>& attacks) const;
 
     void makeHypotheticalMoveInPosition(
         const std::array<Piece, 64>& oldPosition,
@@ -130,5 +129,9 @@ private:
         const Side& opponent
     ) const;
 
+public:
+    static std::array<std::vector<Coordinate>, 64> knightAttacksAtCoord;
+    static void fillKnightAttacksMap();
+private: static void getKnightAttackCoordsAtCoord(const Coordinate& coord, std::vector<Coordinate>& attacks);
 
 };
