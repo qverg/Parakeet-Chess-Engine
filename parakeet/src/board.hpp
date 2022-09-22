@@ -9,6 +9,7 @@
 #include "move.hpp"
 #include "types/piece.hpp"
 #include "types/coordinate.hpp"
+#include "types/piecetype.hpp"
 
 namespace dirs {
     inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
@@ -38,7 +39,7 @@ public:
 
 private:
 
-    std::unordered_map<PieceType, int>* pieceValues_ptr;
+    static std::unordered_map<PieceType, int>* pieceValues_ptr;
 
     struct {
         std::unordered_map<Side, Coordinate> positions;

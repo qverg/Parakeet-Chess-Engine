@@ -6,6 +6,7 @@
 #define SQUARE_TO_COORD(sq) {sq%8, sq/8}
 
 std::array<std::vector<Coordinate>, 64> Board::knightAttacksAtCoord;
+std::unordered_map<PieceType, int>* Board::pieceValues_ptr;
 
 Board::Board() {
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
@@ -51,29 +52,31 @@ void Board::makeMove(const Move& move) {
     //Log(LogLevel::DEBUG, "makeMove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
 
-    if (move.capture) {
-        int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
-        //materialDifference += plusMinus * pieceValues_ptr->at(position[move.after].type);
+    if (move.capture && position[move.after].type != PieceType::EMPTY) {
+        if (position[move.after].type == PieceType::EMPTY)
+            Log(LogLevel::ERROR, "Capture piece is empty");
+        const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
+        materialDifference += plusMinus * (*pieceValues_ptr).at(position[move.after].type);
     }
 
     if (enPassantPossible) enPassantPossible = false;
 
     if (move.promotion) {
         const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
-        materialDifference -= plusMinus * (*pieceValues_ptr).at(PieceType::PAWN);
+        materialDifference -= plusMinus * pieceValues_ptr->at(PieceType::PAWN);
 
         if (move.special1 && move.special0) { // queen-promotion
             piece.type = PieceType::QUEEN;
-            materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::QUEEN);
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::QUEEN);
         } else if (move.special1 && !move.special0) { // rook-promotion
             piece.type = PieceType::ROOK;
-            materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::ROOK);
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::ROOK);
         } else if (!move.special1 && move.special0) { // bishop-promotion
             piece.type = PieceType::BISHOP;
-            materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::BISHOP);
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::BISHOP);
         } else if (!move.special1 && !move.special0) { // knight-promotion
             piece.type = PieceType::KNIGHT;
-            materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::KNIGHT);
+            materialDifference += plusMinus * pieceValues_ptr->at(PieceType::KNIGHT);
         }
     } else if (move.capture) {
         if (move.special0) { // en passant

@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <iostream>
-//#include <algorithm>    // std::max
 
 Engine::Engine() {
     board = Board();
@@ -31,16 +30,12 @@ int Engine::evaluate(const Board& board) const{
     return -board.materialDifference;
 }
 
-int Engine::search(Move& bestMove, const int depth) const {
-    return search(board, bestMove, depth, -infinity, infinity);
-}
-
-int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, int alpha, const int beta) const {
+int Engine::search(const Board& initialBoard, const int depth, int alpha, const int beta) const {
     if (depth == 0) return evaluate(initialBoard);
     
     
     std::vector<Move> moves;
-    board.generateAllMoves(moves);
+    initialBoard.generateAllMoves(moves);
 
     if (moves.size() == 0) {
         //if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
@@ -50,17 +45,17 @@ int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, i
 
     for (const auto& move : moves) {
         Board newBoard = initialBoard;
+        const Piece& piece = newBoard.position[move.before];
+
         newBoard.makeMove(move);
 
-        Move tempMove;
-        const int eval = -search(newBoard, tempMove, depth-1, -beta, -alpha);
+        const int eval = -search(newBoard, depth-1, -beta, -alpha);
 
         if (eval >= beta) {
             return beta;
         }
         if (eval > alpha) {
             alpha = eval;
-            bestMove = move;
         }
     }
 
@@ -69,15 +64,27 @@ int Engine::search(const Board& initialBoard, Move& bestMove, const int depth, i
 
 void Engine::play() {
 
+
+    std::vector<Move> moves;
+    board.generateAllMoves(moves);
+
+    int bestEval = -infinity;
     Move bestMove;
-
+    
     Log(LogLevel::DEBUG, "Starting search");
+    for (const Move& move : moves) {
+        Board newBoard = board;
+        newBoard.makeMove(move);
 
-    if (board.sideToPlay == Side::WHITE)
-        const int eval = search(bestMove, 5);
-    else const int eval = -search(bestMove, 5);
-
+        const int eval = -search(newBoard, 4, -infinity, infinity);
+        
+        if (eval > bestEval) {
+            bestEval = eval;
+            bestMove = move;
+        }
+    }
     Log(LogLevel::DEBUG, "Search complete");
+
 
     if (bestMove.beforeAndAfterDifferent()) {
         board.makeMove(bestMove);

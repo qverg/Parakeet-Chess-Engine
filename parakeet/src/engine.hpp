@@ -18,7 +18,6 @@ private:
     int evaluate(const Board& board) const;
     int search(
         const Board& initialBoard,
-        Move& bestMove,
         const int depth,
         int alpha,
         const int beta
@@ -34,7 +33,6 @@ public:
     Engine();
 
     int evaluate() const;
-    int search(Move& bestMove, const int depth) const;
     void play();
 
     void countMoves(const int depth=1) const;
