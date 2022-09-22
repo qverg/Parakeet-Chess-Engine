@@ -102,7 +102,7 @@ private:
         const bool enPassant = false
     ) const;
 
-    bool getChecksIfMove(
+    void getChecksIfMove(
         std::unordered_map<Side, bool>& checks,
         const int before,
         const int after,

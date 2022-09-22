@@ -442,7 +442,7 @@ void Board::makeHypotheticalMoveInPosition(
     }
 }
 
-bool Board::getChecksIfMove(
+void Board::getChecksIfMove(
         std::unordered_map<Side, bool>& checks,
         const int before,
         const int after,
