@@ -52,11 +52,12 @@ void Board::makeMove(const Move& move) {
     //Log(LogLevel::DEBUG, "makeMove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
 
-    if (move.capture && position[move.after].type != PieceType::EMPTY) {
-        if (position[move.after].type == PieceType::EMPTY)
-            Log(LogLevel::ERROR, "Capture piece is empty");
+    if (move.capture) {
         const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
-        materialDifference += plusMinus * (*pieceValues_ptr).at(position[move.after].type);
+        if (move.isEnPassant())
+            materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::PAWN);
+        else
+            materialDifference += plusMinus * (*pieceValues_ptr).at(position[move.after].type);
     }
 
     if (enPassantPossible) enPassantPossible = false;
@@ -197,7 +198,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     if (position[newSquare].type == PieceType::EMPTY) {
                         addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
                     } else if (position[newSquare].side == opponent) {
-                        addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, true, false);
+                        addMoveIfAcceptable(moves, {square, newSquare, true}, opponent, true, false);
                     }
                 }
             }
@@ -208,7 +209,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     && position[square+1].type == PieceType::EMPTY
                     && position[square+2].type == PieceType::EMPTY) {
                     
-                    addMoveIfAcceptable(moves, {square, square+2, 0, 0, 1, 0}, opponent, true); // king-side castle
+                    addMoveIfAcceptable(moves, {square, square+2, false, false, true, false}, opponent, true); // king-side castle
                 }
                 //Log(LogLevel::DEBUG, "line 207");
                 if (castlingRightsQueenSide.at(piece.side) 
@@ -216,7 +217,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                     && position[square-2].type == PieceType::EMPTY
                     && position[square-3].type == PieceType::EMPTY) {
 
-                    addMoveIfAcceptable(moves, {square, square-2, 0, 0, 1, 1}, opponent, true); // queen-side castle
+                    addMoveIfAcceptable(moves, {square, square-2, false, false, true, true}, opponent, true); // queen-side castle
                 }
             }
 
@@ -253,7 +254,7 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
                 if (position[newSquare].type == PieceType::EMPTY) {
                     addMoveIfAcceptable(moves, {square, newSquare}, opponent, false, true);
                 } else if (position[newSquare].side == opponent) {
-                    addMoveIfAcceptable(moves, {square, newSquare, 1}, opponent, false, true);
+                    addMoveIfAcceptable(moves, {square, newSquare, true}, opponent, false, true);
                 }
             }
         } break;
@@ -382,7 +383,7 @@ void Board::addMoveIfAcceptable(
     if (checksIfMove.at(opponent))
         move.willBeCheck = true;
     
-    moves.emplace_back(move);
+    moves.push_back(move);
     
 }
 
@@ -494,10 +495,10 @@ void Board::generateMovesInDirection(
         if (WITHIN_BOUNDS(nextCoord)) {
 
             if (position[nextSquare].type == PieceType::EMPTY) {
-                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, 0, 0, 0, 0}, opponent);
+                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare}, opponent);
                 lastCoord = nextCoord;
             } else if (position[nextSquare].side == opponent) { // capture
-                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, 0, 1, 0, 0}, opponent);
+                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, true}, opponent);
                 break;
             } else break;
 

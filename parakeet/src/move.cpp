@@ -3,10 +3,10 @@
 Move::Move() {
     before      = 0;
     after       = 0;
-    promotion   = 0;
-    capture     = 0;
-    special1    = 0;
-    special0    = 0;
+    promotion   = false;
+    capture     = false;
+    special1    = false;
+    special0    = false;
 }
 
 Move::Move(int before, int after, bool promotion, bool capture, 
@@ -24,18 +24,18 @@ Move::Move( int before,  int after, bool promotion, bool capture,
 Move::Move( int before,  int after, bool capture)
     : before(before), after(after), capture(capture)
 {
-    promotion   = 0;
-    special1    = 0;
-    special0    = 0;
+    promotion   = false;
+    special1    = false;
+    special0    = false;
 }
 
 Move::Move( int before,  int after)
     : before(before), after(after)
 {
-    promotion   = 0;
-    capture     = 0;
-    special1    = 0;
-    special0    = 0;
+    promotion   = false;
+    capture     = false;
+    special1    = false;
+    special0    = false;
 }
 
 bool Move::beforeAndAfterDifferent() const { return (before != after);} // This is the case when constructed
