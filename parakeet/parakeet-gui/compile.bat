@@ -1,4 +1,4 @@
 @echo off
 cd ..\src
-g++ .\main.cpp .\board.cpp .\move.cpp .\engine.cpp .\utility.cpp .\types\movecounter.cpp -o parakeet
+g++ .\main.cpp .\board.cpp .\move.cpp .\engine.cpp .\utility.cpp .\types\movecounter.cpp -o ..\bin\parakeet
 cd ..\parakeet-gui
