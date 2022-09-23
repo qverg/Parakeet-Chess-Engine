@@ -339,12 +339,30 @@ void Board::addMoveIfAcceptable(
     const bool isKnight,
     const bool enPassant
     ) const {
-    //Log(LogLevel::DEBUG, "addMoveIfAcceptable");
+
     const Piece& piece = position[move.before];
-    std::unordered_map<Side, bool> checksIfMove;
-    getChecksIfMove(checksIfMove, move.before, move.after, piece, isKing, isKnight, enPassant);
-    //Log(LogLevel::DEBUG, "line 344");
-    if (checksIfMove.at(piece.side)) return;  // we can't put ourselves in check
+
+    std::array<Piece, 64> hypotheticalPos;
+    makeHypotheticalMoveInPosition(position, hypotheticalPos, move.before, move.after, piece, enPassant);
+    bool opponentInCheck;
+
+    if (isKing) {
+        std::unordered_map<Side, int> kingPositions = kingsData.positions;
+        kingPositions[piece.side] = move.after;
+
+        std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
+        knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[move.after];
+
+        if (sideInCheck(piece.side,hypotheticalPos,kingPositions,knightAttacksAroundKings,true))
+            return; // can't put yourself in check
+
+        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
+    } else {
+        if (sideInCheck(piece.side,hypotheticalPos,kingsData.positions,kingsData.knightAttacks, true))
+            return; // can't put yourself in check
+
+        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingsData.positions,kingsData.knightAttacks, true);
+    }
 
     if (isKing && move.special1) {
 
@@ -359,13 +377,12 @@ void Board::addMoveIfAcceptable(
         kingPositions[piece.side] = duringCastleSquare;
 
         std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
-        //Log(LogLevel::DEBUG, "line 362");
         knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[duringCastleSquare];
 
         if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
     }
 
-    if (checksIfMove.at(opponent))
+    if (opponentInCheck)
         move.willBeCheck = true;
     
     moves.push_back(move);
@@ -431,35 +448,6 @@ void Board::makeHypotheticalMoveInPosition(
     }
 }
 
-void Board::getChecksIfMove(
-        std::unordered_map<Side, bool>& checks,
-        const int before,
-        const int after,
-        const Piece& piece,
-        const bool isKing,
-        const bool isKnight,
-        const bool enPassant
-        ) const {
-    //Log(LogLevel::DEBUG, "getChecksIfMove");
-    std::array<Piece, 64> hypotheticalPos;
-    makeHypotheticalMoveInPosition(position, hypotheticalPos, before, after, piece, enPassant);
-
-    if (isKing) {
-        std::unordered_map<Side, int> kingPositions = kingsData.positions;
-        kingPositions[piece.side] = after;
-
-        std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
-        knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[after];
-
-        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
-        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
-    } else {
-        checks[Side::WHITE] =  sideInCheck(Side::WHITE,hypotheticalPos,kingsData.positions,
-            kingsData.knightAttacks, true);
-        checks[Side::BLACK] =  sideInCheck(Side::BLACK,hypotheticalPos,kingsData.positions,
-            kingsData.knightAttacks, true);
-    }
-}
 
 void Board::generateMovesInDirection(
         const Coordinate& coord,
@@ -478,7 +466,7 @@ void Board::generateMovesInDirection(
 
         if (WITHIN_BOUNDS(nextCoord)) {
             nextSquare = COORD_TO_SQUARE(nextCoord);
-            if (position[nextSquare].type == PieceType::EMPTY) {
+            if (position[nextSquare].side == Side::EMPTY) {
                 addMoveIfAcceptable(moves, {square, nextSquare}, opponent);
                 lastCoord = nextCoord;
             } else if (position[nextSquare].side == opponent) { // capture
@@ -544,7 +532,7 @@ bool Board::sideInCheck(
     const Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
     // Checking only for opponent is built in to the following lambda!
-    const auto checkForPieceAtCoord = [&](Coordinate coord, PieceType type) {
+    const auto checkForPieceAtCoord = [&](const Coordinate coord, const PieceType type) {
         if (WITHIN_BOUNDS(coord)) {
             const Piece& piece_at_coord = position[COORD_TO_SQUARE(coord)];
             if (piece_at_coord.side == opponent && piece_at_coord.type == type)
