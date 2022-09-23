@@ -40,6 +40,8 @@ public:
 private:
 
     static std::unordered_map<PieceType, int>* pieceValues_ptr;
+    static std::array<std::vector<Coordinate>, 64> knightAttacksAtCoord;
+    static std::array<std::vector<int>, 64> kingMovesAtCoord;
 
     struct {
         std::unordered_map<Side, Coordinate> positions;
@@ -72,9 +74,13 @@ public:
         const bool includeKnights = false
     ) const;
 
+    static void fillKnightAttacksArray();
+    static void fillKingMovesArray();
+
 private:
     void generateMovesInDirection(
         const Coordinate& coord,
+        const int& square,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
         const Side& opponent
@@ -129,9 +135,4 @@ private:
         Move move, // in the form {before, after, capture}
         const Side& opponent
     ) const;
-
-public:
-    static std::array<std::vector<Coordinate>, 64> knightAttacksAtCoord;
-    static void fillKnightAttacksMap();
-
 };

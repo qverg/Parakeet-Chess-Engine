@@ -1,5 +1,6 @@
 #include "engine.hpp"
 #include "log.hpp"
+#include "timer.hpp"
 
 #include <vector>
 #include <iostream>
@@ -15,7 +16,8 @@ Engine::Engine() {
     pieceValues[PieceType::KING] = 1000000;
 
     board.setPieceValues(pieceValues);
-    board.fillKnightAttacksMap();
+    board.fillKnightAttacksArray();
+    board.fillKingMovesArray();
 }
 
 int Engine::evaluate() const {
@@ -72,15 +74,18 @@ void Engine::play() {
     Move bestMove;
     
     Log(LogLevel::DEBUG, "Starting search");
-    for (const Move& move : moves) {
-        Board newBoard = board;
-        newBoard.makeMove(move);
+    {
+        Timer timer;
+        for (const Move& move : moves) {
+            Board newBoard = board;
+            newBoard.makeMove(move);
 
-        const int eval = -search(newBoard, 4, -infinity, infinity);
-        
-        if (eval > bestEval) {
-            bestEval = eval;
-            bestMove = move;
+            const int eval = -search(newBoard, 4, -infinity, infinity);
+            
+            if (eval > bestEval) {
+                bestEval = eval;
+                bestMove = move;
+            }
         }
     }
     Log(LogLevel::DEBUG, "Search complete");

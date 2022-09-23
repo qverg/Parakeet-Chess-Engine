@@ -5,8 +5,9 @@
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
 #define SQUARE_TO_COORD(sq) {sq%8, sq/8}
 
-std::array<std::vector<Coordinate>, 64> Board::knightAttacksAtCoord;
 std::unordered_map<PieceType, int>* Board::pieceValues_ptr;
+std::array<std::vector<Coordinate>, 64> Board::knightAttacksAtCoord;
+std::array<std::vector<int>, 64> Board::kingMovesAtCoord;
 
 Board::Board() {
     castlingRightsKingSide[Side::WHITE]  = true;    castlingRightsKingSide[Side::BLACK]  = true;
@@ -49,7 +50,6 @@ void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
 }
 
 void Board::makeMove(const Move& move) {
-    //Log(LogLevel::DEBUG, "makeMove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
 
     if (move.capture) {
@@ -105,7 +105,6 @@ void Board::makeMove(const Move& move) {
         castlingRightsKingSide[piece.side] = false;
         castlingRightsQueenSide[piece.side] = false;
         kingsData.positions[piece.side] = SQUARE_TO_COORD((int)move.after);
-        //Log(LogLevel::DEBUG, "line 101");
         kingsData.knightAttacks.at(piece.side) = &knightAttacksAtCoord[move.after];
     }
 
@@ -187,31 +186,21 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::KING: {
             // king moves
-            std::array<Coordinate, 8> candidates = {
-                dirs::north(c),     dirs::south(c),     dirs::east(c),      dirs::west(c),
-                dirs::northeast(c), dirs::southeast(c), dirs::northwest(c), dirs::southwest(c)
-            };
-
-            for (Coordinate& candidate : candidates) {
-                const unsigned short newSquare = COORD_TO_SQUARE(candidate);
-                if (WITHIN_BOUNDS(candidate)) {
-                    if (position[newSquare].type == PieceType::EMPTY) {
-                        addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
-                    } else if (position[newSquare].side == opponent) {
-                        addMoveIfAcceptable(moves, {square, newSquare, true}, opponent, true, false);
-                    }
+            for (const int newSquare : kingMovesAtCoord[square]) {
+                if (position[newSquare].type == PieceType::EMPTY) {
+                    addMoveIfAcceptable(moves, {square, newSquare}, opponent, true, false);
+                } else if (position[newSquare].side == opponent) {
+                    addMoveIfAcceptable(moves, {square, newSquare, true}, opponent, true, false);
                 }
             }
-            //Log(LogLevel::DEBUG, "line 198");
+
             if (!check.at(piece.side)) {
-                //Log(LogLevel::DEBUG, "line 199");
                 if (castlingRightsKingSide.at(piece.side)
                     && position[square+1].type == PieceType::EMPTY
                     && position[square+2].type == PieceType::EMPTY) {
                     
                     addMoveIfAcceptable(moves, {square, square+2, false, false, true, false}, opponent, true); // king-side castle
                 }
-                //Log(LogLevel::DEBUG, "line 207");
                 if (castlingRightsQueenSide.at(piece.side) 
                     && position[square-1].type == PieceType::EMPTY
                     && position[square-2].type == PieceType::EMPTY
@@ -225,23 +214,23 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::QUEEN: {
             // queen moves
-            generateMovesInDirection(c, dirs::north,     moves, opponent);
-            generateMovesInDirection(c, dirs::south,     moves, opponent);
-            generateMovesInDirection(c, dirs::east,      moves, opponent);
-            generateMovesInDirection(c, dirs::west,      moves, opponent);
+            generateMovesInDirection(c, square, dirs::north,     moves, opponent);
+            generateMovesInDirection(c, square, dirs::south,     moves, opponent);
+            generateMovesInDirection(c, square, dirs::east,      moves, opponent);
+            generateMovesInDirection(c, square, dirs::west,      moves, opponent);
 
-            generateMovesInDirection(c, dirs::southeast, moves, opponent);
-            generateMovesInDirection(c, dirs::northeast, moves, opponent);
-            generateMovesInDirection(c, dirs::northwest, moves, opponent);
-            generateMovesInDirection(c, dirs::southwest, moves, opponent);
+            generateMovesInDirection(c, square, dirs::southeast, moves, opponent);
+            generateMovesInDirection(c, square, dirs::northeast, moves, opponent);
+            generateMovesInDirection(c, square, dirs::northwest, moves, opponent);
+            generateMovesInDirection(c, square, dirs::southwest, moves, opponent);
         } break;
 
         case PieceType::BISHOP: {
             // bishop moves
-            generateMovesInDirection(c, dirs::northeast, moves, opponent);
-            generateMovesInDirection(c, dirs::southeast, moves, opponent);
-            generateMovesInDirection(c, dirs::northwest, moves, opponent);
-            generateMovesInDirection(c, dirs::southwest, moves, opponent);
+            generateMovesInDirection(c, square, dirs::northeast, moves, opponent);
+            generateMovesInDirection(c, square, dirs::southeast, moves, opponent);
+            generateMovesInDirection(c, square, dirs::northwest, moves, opponent);
+            generateMovesInDirection(c, square, dirs::southwest, moves, opponent);
         } break;
 
         case PieceType::KNIGHT: {
@@ -261,10 +250,10 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         case PieceType::ROOK: {
             // rook moves
-            generateMovesInDirection(c, dirs::north,    moves, opponent);
-            generateMovesInDirection(c, dirs::south,    moves, opponent);
-            generateMovesInDirection(c, dirs::east,     moves, opponent);
-            generateMovesInDirection(c, dirs::west,     moves, opponent);
+            generateMovesInDirection(c, square, dirs::north,    moves, opponent);
+            generateMovesInDirection(c, square, dirs::south,    moves, opponent);
+            generateMovesInDirection(c, square, dirs::east,     moves, opponent);
+            generateMovesInDirection(c, square, dirs::west,     moves, opponent);
         } break;
         case PieceType::PAWN: {
             // pawn moves
@@ -479,26 +468,26 @@ void Board::getChecksIfMove(
 
 void Board::generateMovesInDirection(
         const Coordinate& coord,
+        const int& square,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         std::vector<Move>& moves,
         const Side& opponent
     ) const {
     //Log(LogLevel::DEBUG, "generateMovesInDirection");
-    unsigned short nextSquare;
+    int nextSquare;
     Coordinate nextCoord;
     Coordinate lastCoord = coord;
 
     for (int i = 1; i < 8; i++) {
         nextCoord = directionFunc(lastCoord);
-        nextSquare = COORD_TO_SQUARE(nextCoord);
 
         if (WITHIN_BOUNDS(nextCoord)) {
-
+            nextSquare = COORD_TO_SQUARE(nextCoord);
             if (position[nextSquare].type == PieceType::EMPTY) {
-                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare}, opponent);
+                addMoveIfAcceptable(moves, {square, nextSquare}, opponent);
                 lastCoord = nextCoord;
             } else if (position[nextSquare].side == opponent) { // capture
-                addMoveIfAcceptable(moves, {COORD_TO_SQUARE(coord), nextSquare, true}, opponent);
+                addMoveIfAcceptable(moves, {square, nextSquare, true}, opponent);
                 break;
             } else break;
 
@@ -624,7 +613,7 @@ bool Board::sideInCheck(
     return false;
 }
 
-void Board::fillKnightAttacksMap() {
+void Board::fillKnightAttacksArray() {
     for (int square = 0; square < 64; square++) {
         const Coordinate coord = SQUARE_TO_COORD(square);
 
@@ -642,6 +631,22 @@ void Board::fillKnightAttacksMap() {
         for (const auto& possibleCoord : possible) {
             if (WITHIN_BOUNDS(possibleCoord))
                 knightAttacksAtCoord[square].push_back(possibleCoord);
+        }
+    }
+}
+
+void Board::fillKingMovesArray() {
+    for (int square = 0; square < 64; square++) {
+        const Coordinate c = SQUARE_TO_COORD(square);
+
+        const std::array<Coordinate, 8> possible = {
+                dirs::north(c),     dirs::south(c),     dirs::east(c),      dirs::west(c),
+                dirs::northeast(c), dirs::southeast(c), dirs::northwest(c), dirs::southwest(c)
+        };
+
+        for (const auto& possibleCoord : possible) {
+            if (WITHIN_BOUNDS(possibleCoord))
+                kingMovesAtCoord[square].push_back(COORD_TO_SQUARE(possibleCoord));
         }
     }
 }
