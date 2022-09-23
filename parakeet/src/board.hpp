@@ -40,12 +40,12 @@ public:
 private:
 
     static std::unordered_map<PieceType, int>* pieceValues_ptr;
-    static std::array<std::vector<Coordinate>, 64> knightAttacksAtCoord;
-    static std::array<std::vector<int>, 64> kingMovesAtCoord;
+    static std::array<std::vector<int>, 64> knightAttacksAtSquare;
+    static std::array<std::vector<int>, 64> kingMovesAtSquare;
 
     struct {
-        std::unordered_map<Side, Coordinate> positions;
-        std::unordered_map<Side, std::vector<Coordinate>*> knightAttacks;
+        std::unordered_map<Side, int> positions;
+        std::unordered_map<Side, std::vector<int>*> knightAttacks;
     } kingsData;
 
 public:
@@ -69,8 +69,8 @@ public:
     bool sideInCheck(
         const Side& side,
         const std::array<Piece, 64>& position,
-        const std::unordered_map<Side, Coordinate>& kingPositions,
-        const std::unordered_map<Side, std::vector<Coordinate>*>& knightAttacksAroundKings,
+        const std::unordered_map<Side, int>& kingPositions,
+        const std::unordered_map<Side, std::vector<int>*>& knightAttacksAroundKings,
         const bool includeKnights = false
     ) const;
 
