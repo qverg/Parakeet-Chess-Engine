@@ -413,16 +413,16 @@ void Board::addAllPromotionsIfAcceptable(
     makeHypotheticalMoveInPosition(position, bishopPromo, move.before, move.after, {PieceType::BISHOP, side});
     makeHypotheticalMoveInPosition(position, knightPromo, move.before, move.after, {PieceType::KNIGHT, side});
 
-    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 1,       // these casts are scuffed but oh well I mean they're ints anyway surely the compiler gets rid of this
+    moves.emplace_back(move.before, move.after, 1, move.capture, 1, 1,
         sideInCheck(opponent, queenPromo, kingsData.positions, kingsData.knightAttacks));   // queen promo
 
-    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 0, 0,
+    moves.emplace_back(move.before, move.after, 1, move.capture, 0, 0,
         sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks, true));  // knight promo
 
-    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 1, 0,
+    moves.emplace_back(move.before, move.after, 1, move.capture, 1, 0,
         sideInCheck(opponent, rookPromo, kingsData.positions, kingsData.knightAttacks));    // rook promo
 
-    moves.emplace_back((int)move.before, (int)move.after, 1, (int)move.capture, 0, 1,
+    moves.emplace_back(move.before, move.after, 1, move.capture, 0, 1,
         sideInCheck(opponent, bishopPromo, kingsData.positions, kingsData.knightAttacks));  // bishop promo
 
     // (see https://www.chessprogramming.org/Encoding_Moves)
