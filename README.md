@@ -15,3 +15,7 @@ Compile using ``.\compile.bat`` inside parakeet/src and run using ``.\parakeet.e
 
 ### Running the GUI
 Compile using ``.\compile.bat`` inside parakeet/parakeet-gui and run using ``.\run.bat``.
+
+
+
+lmk if you know how to get gitignore to ignore "Open VS Code here.bat"
