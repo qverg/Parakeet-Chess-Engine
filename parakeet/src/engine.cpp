@@ -32,7 +32,7 @@ int Engine::evaluate(const Board& board) const{
     return -board.materialDifference;
 }
 
-int Engine::search(const Board& initialBoard, const int depth, int alpha, const int beta) const {
+int Engine::search(Board& initialBoard, const int depth, int alpha, const int beta) const {
     if (depth == 0) return evaluate(initialBoard);
     
     
@@ -46,12 +46,16 @@ int Engine::search(const Board& initialBoard, const int depth, int alpha, const 
     }
 
     for (const auto& move : moves) {
-        Board newBoard = initialBoard;
+        /*Board newBoard = initialBoard;
         const Piece& piece = newBoard.position[move.before];
 
         newBoard.makeMove(move);
 
-        const int eval = -search(newBoard, depth-1, -beta, -alpha);
+        const int eval = -search(newBoard, depth-1, -beta, -alpha);*/
+
+        initialBoard.makeMove(move);
+        const int eval = -search(initialBoard, depth-1, -beta, -alpha);
+        initialBoard.unmakeMove();
 
         if (eval >= beta) {
             return beta;
@@ -66,10 +70,8 @@ int Engine::search(const Board& initialBoard, const int depth, int alpha, const 
 
 void Engine::play() {
 
-
     std::vector<Move> moves;
     board.generateAllMoves(moves);
-
     int bestEval = -infinity;
     Move bestMove;
     
@@ -77,11 +79,10 @@ void Engine::play() {
     {
         Timer timer;
         for (const Move& move : moves) {
-            Board newBoard = board;
-            newBoard.makeMove(move);
-
-            const int eval = -search(newBoard, 4, -infinity, infinity);
-            
+            board.makeMove(move);
+            const int eval = -search(board, 3, -infinity, infinity);
+            board.unmakeMove();
+            //Log(LogLevel::DEBUG, eval);
             if (eval > bestEval) {
                 bestEval = eval;
                 bestMove = move;
@@ -96,6 +97,7 @@ void Engine::play() {
     } else {
         Log(LogLevel::INFO, "No moves found");
     }
+    Log(LogLevel::INFO, board.materialDifference);
 }
 
 

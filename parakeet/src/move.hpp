@@ -24,6 +24,8 @@ public:
 
     bool beforeAndAfterDifferent() const;
     bool isCastle() const;
+    bool isKingSideCastle() const;
+    bool isQueenSideCastle() const;
     bool isEnPassant() const;
 
 };

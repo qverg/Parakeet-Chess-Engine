@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "log.hpp"
+#include <cassert>
 
 #define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
 #define COORD_TO_SQUARE(c)  c.y * 8 + c.x
@@ -50,14 +51,45 @@ void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
 }
 
 void Board::makeMove(const Move& move) {
+    Log(LogLevel::DEBUG, "entering makemove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
+    if (position[move.after].type == PieceType::EMPTY && move.capture) {
+        Log(LogLevel::DEBUG, "stop");
+    }
+    /*if(position[move.before].side != sideToPlay) {
+        Log(LogLevel::DEBUG, "stop");
+    } else {
+        Log(LogLevel::DEBUG, "also stop");
+    }
+    //assert(!(!move.isEnPassant() && move.capture && position[move.after].type == PieceType::EMPTY));
+    if (!move.isEnPassant() && move.capture && position[move.after].type == PieceType::EMPTY) {
+        Log(LogLevel::DEBUG, "stop");
+    }*/
+
+
+    // Save lastPosData to unmake move later
+    lastPosData.move = move;
+    lastPosData.whoseTurnItWas = sideToPlay;
+    lastPosData.pieceCaptured = position[move.after];
+    lastPosData.materialDifference = materialDifference;
+    lastPosData.whiteCanCastleKingSide = castlingRightsKingSide.at(Side::WHITE);
+    lastPosData.blackCanCastleKingSide = castlingRightsKingSide.at(Side::BLACK);
+    lastPosData.whiteCanCastleQueenSide = castlingRightsQueenSide.at(Side::WHITE);
+    lastPosData.blackCanCastleQueenSide = castlingRightsQueenSide.at(Side::BLACK);
+    lastPosData.whiteInCheck = check.at(Side::WHITE);
+    lastPosData.blackInCheck = check.at(Side::BLACK);
 
     if (move.capture) {
         const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
         if (move.isEnPassant())
             materialDifference += plusMinus * (*pieceValues_ptr).at(PieceType::PAWN);
-        else
-            materialDifference += plusMinus * (*pieceValues_ptr).at(position[move.after].type);
+        else {
+            try {
+                materialDifference += plusMinus * (*pieceValues_ptr).at(position[move.after].type);
+            } catch (std::out_of_range) {
+                
+            }
+        }
     }
 
     if (enPassantPossible) enPassantPossible = false;
@@ -100,12 +132,17 @@ void Board::makeMove(const Move& move) {
         }
     }
 
-    // castling rights
     if (piece.type == PieceType::KING) {
-        castlingRightsKingSide[piece.side] = false;
-        castlingRightsQueenSide[piece.side] = false;
+        // update king things
         kingsData.positions[piece.side] = move.after;
         kingsData.knightAttacks.at(piece.side) = &knightAttacksAtSquare[move.after];
+
+        // castling rights
+        if (castlingRightsKingSide.at(piece.side))
+            castlingRightsKingSide[piece.side] = false;
+        if (castlingRightsQueenSide.at(piece.side))
+            castlingRightsQueenSide[piece.side] = false;
+
     }
 
     if (piece.side == Side::WHITE) {
@@ -132,6 +169,70 @@ void Board::makeMove(const Move& move) {
     check[piece.side] = false;  // you can't move so that you will be in check (implemented during move gen)
 }
 
+void Board::unmakeMove() {
+    Move& lastMove = lastPosData.move;
+
+    if (lastMove.isEnPassant()) {
+        position[lastMove.after] = EMPTY_SQUARE;
+        enPassantPossible = true;
+        if (lastPosData.whoseTurnItWas == Side::WHITE) {
+            position[lastMove.before] = {PieceType::PAWN, Side::WHITE};
+            position[lastMove.after-8] = {PieceType::PAWN, Side::BLACK};
+            lastDoublePawnPush = lastMove.after-8;
+        } else {
+            position[lastMove.before] = {PieceType::PAWN, Side::BLACK};
+            position[lastMove.after+8] = {PieceType::PAWN, Side::WHITE};
+            lastDoublePawnPush = lastMove.after+8;
+        }
+    } else if (lastMove.isCastle()) {
+        position[lastMove.after] = EMPTY_SQUARE;
+        position[lastMove.before] = {PieceType::KING, lastPosData.whoseTurnItWas};
+        if (!lastMove.special0) {
+            // king-side castle
+            position[lastMove.before+1] = EMPTY_SQUARE;
+            position[lastMove.before+3] = {PieceType::ROOK, lastPosData.whoseTurnItWas};
+        } else {
+            // queen-side castle
+            position[lastMove.before-1] = EMPTY_SQUARE;
+            position[lastMove.before-4] = {PieceType::ROOK, lastPosData.whoseTurnItWas};
+        }
+
+    } else if (lastMove.promotion) {
+        // promotion or promo capture
+        position[lastMove.before] = {PieceType::PAWN, lastPosData.whoseTurnItWas};
+        position[lastMove.after] = lastPosData.pieceCaptured;
+    } else {
+        // either a normal capture or a normal non-capture move
+        if (position[lastMove.after].type == PieceType::EMPTY) {
+            Log(LogLevel::DEBUG, "stop");
+        }
+        if (position[lastMove.after].type != PieceType::EMPTY) {
+            Log(LogLevel::DEBUG, "pog");
+        }
+        //assert(!(position[lastMove.after].type == PieceType::EMPTY && lastMove.capture));   
+        position[lastMove.before] = position[lastMove.after];
+        position[lastMove.after] = lastPosData.pieceCaptured;
+    }
+
+    // update checks
+    check[Side::WHITE] = lastPosData.whiteInCheck;
+    check[Side::BLACK] = lastPosData.blackInCheck;
+
+    // update castling rights
+    castlingRightsKingSide[Side::WHITE] = lastPosData.whiteCanCastleKingSide;
+    castlingRightsKingSide[Side::BLACK] = lastPosData.blackCanCastleKingSide;
+    castlingRightsQueenSide[Side::WHITE] = lastPosData.whiteCanCastleQueenSide;
+    castlingRightsQueenSide[Side::BLACK] = lastPosData.blackCanCastleQueenSide;
+
+    // update material difference
+    materialDifference = lastPosData.materialDifference;
+
+    // update side to play
+    sideToPlay = lastPosData.whoseTurnItWas;
+
+}
+
+
 void Board::reset() {
 
     for (int i = 0; i < 64; i++) {
@@ -149,8 +250,10 @@ void Board::reset() {
     position[59] = {PieceType::QUEEN, Side::BLACK};  position[60] = {PieceType::KING, Side::BLACK};
     
     for (int i = 0; i < 8; i++) {
-        position[i+8]   = {PieceType::PAWN, Side::WHITE};
-        position[i+48]  = {PieceType::PAWN, Side::BLACK};
+        //position[i+8]   = {PieceType::PAWN, Side::WHITE};
+        //position[i+48]  = {PieceType::PAWN, Side::BLACK};
+        position[i+24]   = {PieceType::PAWN, Side::WHITE};
+        position[i+32]  = {PieceType::PAWN, Side::BLACK};
     }
 
     kingsData.positions[Side::WHITE] = 4; 
@@ -343,43 +446,44 @@ void Board::addMoveIfAcceptable(
     const Piece& piece = position[move.before];
 
     std::array<Piece, 64> hypotheticalPos;
-    makeHypotheticalMoveInPosition(position, hypotheticalPos, move.before, move.after, piece, enPassant);
+    makeHypotheticalMoveInPosition(position, hypotheticalPos, move.before, move.after, piece, enPassant, move.special1);
     bool opponentInCheck;
 
     if (isKing) {
+        
         std::unordered_map<Side, int> kingPositions = kingsData.positions;
         kingPositions[piece.side] = move.after;
 
         std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
         knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[move.after];
 
-        if (sideInCheck(piece.side,hypotheticalPos,kingPositions,knightAttacksAroundKings,true))
+        if (sideInCheck(piece.side,hypotheticalPos,kingPositions,knightAttacksAroundKings))
             return; // can't put yourself in check
 
-        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingPositions,knightAttacksAroundKings,true);
+        if (move.special1) {
+            int duringCastleSquare;
+            if (!move.special0) duringCastleSquare = move.after-1;  // king-side castle
+            else duringCastleSquare = move.after+1;                 // queen-side castle
+            
+            std::array<Piece, 64> duringCastle;
+            makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, piece);
+
+            std::unordered_map<Side, int> kingPositions = kingsData.positions;
+            kingPositions[piece.side] = duringCastleSquare;
+
+            std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
+            knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[duringCastleSquare];
+
+            if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings)) return;
+        }
+
+        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingPositions,knightAttacksAroundKings);
+
     } else {
-        if (sideInCheck(piece.side,hypotheticalPos,kingsData.positions,kingsData.knightAttacks, true))
+        if (sideInCheck(piece.side,hypotheticalPos,kingsData.positions,kingsData.knightAttacks))
             return; // can't put yourself in check
 
-        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingsData.positions,kingsData.knightAttacks, true);
-    }
-
-    if (isKing && move.special1) {
-
-        int duringCastleSquare;
-        if (!move.special0) duringCastleSquare = move.after-1;  // king-side castle
-        else duringCastleSquare = move.after+1;                 // queen-side castle
-        
-        std::array<Piece, 64> duringCastle;
-        makeHypotheticalMoveInPosition(position, duringCastle, move.before, duringCastleSquare, piece);
-
-        std::unordered_map<Side, int> kingPositions = kingsData.positions;
-        kingPositions[piece.side] = duringCastleSquare;
-
-        std::unordered_map<Side, std::vector<int>*> knightAttacksAroundKings = kingsData.knightAttacks;
-        knightAttacksAroundKings.at(piece.side) = &knightAttacksAtSquare[duringCastleSquare];
-
-        if (sideInCheck(piece.side, duringCastle, kingPositions, knightAttacksAroundKings, true)) return;
+        opponentInCheck = sideInCheck(opponent,hypotheticalPos,kingsData.positions,kingsData.knightAttacks);
     }
 
     if (opponentInCheck)
@@ -402,7 +506,7 @@ void Board::addAllPromotionsIfAcceptable(
     makeHypotheticalMoveInPosition(position, queenPromo, move.before, move.after, {PieceType::QUEEN, side});
 
     // check if we're not putting ourselves in check
-    if (sideInCheck(side, queenPromo, kingsData.positions, kingsData.knightAttacks, true)) return;
+    if (sideInCheck(side, queenPromo, kingsData.positions, kingsData.knightAttacks)) return;
 
 
     std::array<Piece, 64> rookPromo;
@@ -417,7 +521,7 @@ void Board::addAllPromotionsIfAcceptable(
         sideInCheck(opponent, queenPromo, kingsData.positions, kingsData.knightAttacks));   // queen promo
 
     moves.emplace_back(move.before, move.after, 1, move.capture, 0, 0,
-        sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks, true));  // knight promo
+        sideInCheck(opponent, knightPromo, kingsData.positions, kingsData.knightAttacks));  // knight promo
 
     moves.emplace_back(move.before, move.after, 1, move.capture, 1, 0,
         sideInCheck(opponent, rookPromo, kingsData.positions, kingsData.knightAttacks));    // rook promo
@@ -428,14 +532,15 @@ void Board::addAllPromotionsIfAcceptable(
     // (see https://www.chessprogramming.org/Encoding_Moves)
 }
 
-// Just makes before empty and after the new piece
+// Makes hyothetical move (no promotions!)
 void Board::makeHypotheticalMoveInPosition(
         const std::array<Piece, 64>& oldPosition,
         std::array<Piece, 64>& newPosition,
-        const unsigned int before,
-        const unsigned int after,
-        const Piece piece,
-        const bool enPassant
+        const int& before,
+        const int& after,
+        const Piece& piece,
+        const bool enPassant,
+        const bool castle
     ) const {
     //Log(LogLevel::DEBUG, "makeHypotheticalMoveInPosition");
     newPosition = oldPosition;
@@ -445,6 +550,14 @@ void Board::makeHypotheticalMoveInPosition(
     if (enPassant) {
         if (after-before == 9 || after-before == -7) newPosition[before+1] = EMPTY_SQUARE;
         else if (after-before == 7 || after-before == -9) newPosition[before-1] = EMPTY_SQUARE;
+    } else if (castle) {
+        if (after-before > 0) { // king-side castle
+            newPosition[after+1] = EMPTY_SQUARE;
+            newPosition[after-1] = {PieceType::ROOK, piece.side};
+        } else {    // queen-side castle
+            newPosition[after-2] = EMPTY_SQUARE;
+            newPosition[after+1] = {PieceType::ROOK, piece.side};
+        }
     }
 }
 
@@ -513,25 +626,22 @@ PieceType Board::getNextOpponentPieceInDirection(
 
 }
 
-bool Board::sideInCheck(const Side& side, const bool includeKnights) const {
-    return sideInCheck(side, position, kingsData.positions, kingsData.knightAttacks, includeKnights);
+bool Board::sideInCheck(const Side& side) const {
+    return sideInCheck(side, position, kingsData.positions, kingsData.knightAttacks);
 }
 
 bool Board::sideInCheck(
     const Side& side,
     const std::array<Piece, 64>& position,
     const std::unordered_map<Side, int>& kingPositions,
-    const std::unordered_map<Side, std::vector<int>*>& knightAttacksAroundKings,
-    const bool includeKnights
+    const std::unordered_map<Side, std::vector<int>*>& knightAttacksAroundKings
     ) const {
-    /* We check for knight positions and cast rays around the king*/
     //Log(LogLevel::INFO, "Checking for check!"); // Leaving this here to optimise when we're looking for checks later
-    //Log(LogLevel::DEBUG, "line 544");
-    //Log(LogLevel::DEBUG, "sideInCheck");
+
     const Coordinate king_pos = SQUARE_TO_COORD(kingPositions.at(side));
     const Side opponent = (side == Side::WHITE) ? Side::BLACK : Side::WHITE;
 
-    // Checking only for opponent is built in to the following lambda!
+    // Checking only for opponent is built in to this lambda!
     const auto checkForPieceAtCoord = [&](const Coordinate coord, const PieceType type) {
         if (WITHIN_BOUNDS(coord)) {
             const Piece& piece_at_coord = position[COORD_TO_SQUARE(coord)];
@@ -542,12 +652,10 @@ bool Board::sideInCheck(
     };
 
     // Look for knights
-    if (includeKnights){
-        for (const int& candidate : *knightAttacksAroundKings.at(side)) {
-            const Piece& pieceAtSquare = position[candidate];
-            if (pieceAtSquare.side == opponent && pieceAtSquare.type == PieceType::KNIGHT) {
-                return true;
-            }
+    for (const int& candidate : *knightAttacksAroundKings.at(side)) {
+        const Piece& pieceAtSquare = position[candidate];
+        if (pieceAtSquare.side == opponent && pieceAtSquare.type == PieceType::KNIGHT) {
+            return true;
         }
     }
     //Log(LogLevel::DEBUG, "No knight checks found");

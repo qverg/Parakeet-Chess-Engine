@@ -45,6 +45,14 @@ bool Move::isCastle() const {
     return (!promotion && !capture && special1);
 }
 
+bool Move::isKingSideCastle() const {
+    return(!promotion && !capture && special1 && !special0);
+}
+
+bool Move::isQueenSideCastle() const {
+    return(!promotion && !capture && special1 && special0);
+}
+
 bool Move::isEnPassant() const {
     return (!promotion && capture && special0);
 }

@@ -8,8 +8,10 @@
 
 #include "move.hpp"
 #include "types/piece.hpp"
+#include "types/side.hpp"
 #include "types/coordinate.hpp"
 #include "types/piecetype.hpp"
+#include "types/lastpositiondata.hpp"
 
 namespace dirs {
     inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
@@ -48,6 +50,8 @@ private:
         std::unordered_map<Side, std::vector<int>*> knightAttacks;
     } kingsData;
 
+    LastPositionData lastPosData;
+
 public:
     Board();
     Board(std::array<Piece, 64>& position, Side sideToPlay,
@@ -57,6 +61,7 @@ public:
     void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
 
     void makeMove(const Move& move);
+    void unmakeMove();
 
     void reset();
 
@@ -65,13 +70,12 @@ public:
 
     std::string getPositionString() const;
 
-    bool sideInCheck(const Side& side, const bool includeKnights=true) const;
+    bool sideInCheck(const Side& side) const;
     bool sideInCheck(
         const Side& side,
         const std::array<Piece, 64>& position,
         const std::unordered_map<Side, int>& kingPositions,
-        const std::unordered_map<Side, std::vector<int>*>& knightAttacksAroundKings,
-        const bool includeKnights = false
+        const std::unordered_map<Side, std::vector<int>*>& knightAttacksAroundKings
     ) const;
 
     static void fillKnightAttacksArray();
@@ -103,10 +107,11 @@ private:
     void makeHypotheticalMoveInPosition(
         const std::array<Piece, 64>& oldPosition,
         std::array<Piece, 64>& newPosition,
-        const unsigned int before,
-        const unsigned int after,
-        const Piece piece,
-        const bool enPassant = false
+        const int& before,
+        const int& after,
+        const Piece& piece,
+        const bool enPassant = false,
+        const bool castle = false
     ) const;
 
     void getChecksIfMove(

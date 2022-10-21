@@ -17,7 +17,7 @@ private:
 
     int evaluate(const Board& board) const;
     int search(
-        const Board& initialBoard,
+        Board& initialBoard,
         const int depth,
         int alpha,
         const int beta
