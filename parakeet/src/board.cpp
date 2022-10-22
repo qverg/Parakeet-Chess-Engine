@@ -50,6 +50,20 @@ void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
     pieceValues_ptr = &pieceValues;
 }
 
+void Board::savePositionData(const Move& move, LastPositionData* lastPosData) {
+    // Save lastPosData to unmake move later
+    lastPosData->move = move;
+    lastPosData->whoseTurnItWas = sideToPlay;
+    lastPosData->pieceCaptured = position[move.after];
+    lastPosData->materialDifference = materialDifference;
+    lastPosData->whiteCanCastleKingSide = castlingRightsKingSide.at(Side::WHITE);
+    lastPosData->blackCanCastleKingSide = castlingRightsKingSide.at(Side::BLACK);
+    lastPosData->whiteCanCastleQueenSide = castlingRightsQueenSide.at(Side::WHITE);
+    lastPosData->blackCanCastleQueenSide = castlingRightsQueenSide.at(Side::BLACK);
+    lastPosData->whiteInCheck = check.at(Side::WHITE);
+    lastPosData->blackInCheck = check.at(Side::BLACK);
+}
+
 void Board::makeMove(const Move& move) {
     Log(LogLevel::DEBUG, "entering makemove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
@@ -65,19 +79,6 @@ void Board::makeMove(const Move& move) {
     if (!move.isEnPassant() && move.capture && position[move.after].type == PieceType::EMPTY) {
         Log(LogLevel::DEBUG, "stop");
     }*/
-
-
-    // Save lastPosData to unmake move later
-    lastPosData.move = move;
-    lastPosData.whoseTurnItWas = sideToPlay;
-    lastPosData.pieceCaptured = position[move.after];
-    lastPosData.materialDifference = materialDifference;
-    lastPosData.whiteCanCastleKingSide = castlingRightsKingSide.at(Side::WHITE);
-    lastPosData.blackCanCastleKingSide = castlingRightsKingSide.at(Side::BLACK);
-    lastPosData.whiteCanCastleQueenSide = castlingRightsQueenSide.at(Side::WHITE);
-    lastPosData.blackCanCastleQueenSide = castlingRightsQueenSide.at(Side::BLACK);
-    lastPosData.whiteInCheck = check.at(Side::WHITE);
-    lastPosData.blackInCheck = check.at(Side::BLACK);
 
     if (move.capture) {
         const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
@@ -169,13 +170,13 @@ void Board::makeMove(const Move& move) {
     check[piece.side] = false;  // you can't move so that you will be in check (implemented during move gen)
 }
 
-void Board::unmakeMove() {
-    Move& lastMove = lastPosData.move;
+void Board::unmakeMove(const LastPositionData* lastPosData) {
+    const Move& lastMove = lastPosData->move;
 
     if (lastMove.isEnPassant()) {
         position[lastMove.after] = EMPTY_SQUARE;
         enPassantPossible = true;
-        if (lastPosData.whoseTurnItWas == Side::WHITE) {
+        if (lastPosData->whoseTurnItWas == Side::WHITE) {
             position[lastMove.before] = {PieceType::PAWN, Side::WHITE};
             position[lastMove.after-8] = {PieceType::PAWN, Side::BLACK};
             lastDoublePawnPush = lastMove.after-8;
@@ -186,21 +187,21 @@ void Board::unmakeMove() {
         }
     } else if (lastMove.isCastle()) {
         position[lastMove.after] = EMPTY_SQUARE;
-        position[lastMove.before] = {PieceType::KING, lastPosData.whoseTurnItWas};
+        position[lastMove.before] = {PieceType::KING, lastPosData->whoseTurnItWas};
         if (!lastMove.special0) {
             // king-side castle
             position[lastMove.before+1] = EMPTY_SQUARE;
-            position[lastMove.before+3] = {PieceType::ROOK, lastPosData.whoseTurnItWas};
+            position[lastMove.before+3] = {PieceType::ROOK, lastPosData->whoseTurnItWas};
         } else {
             // queen-side castle
             position[lastMove.before-1] = EMPTY_SQUARE;
-            position[lastMove.before-4] = {PieceType::ROOK, lastPosData.whoseTurnItWas};
+            position[lastMove.before-4] = {PieceType::ROOK, lastPosData->whoseTurnItWas};
         }
 
     } else if (lastMove.promotion) {
         // promotion or promo capture
-        position[lastMove.before] = {PieceType::PAWN, lastPosData.whoseTurnItWas};
-        position[lastMove.after] = lastPosData.pieceCaptured;
+        position[lastMove.before] = {PieceType::PAWN, lastPosData->whoseTurnItWas};
+        position[lastMove.after] = lastPosData->pieceCaptured;
     } else {
         // either a normal capture or a normal non-capture move
         if (position[lastMove.after].type == PieceType::EMPTY) {
@@ -211,24 +212,24 @@ void Board::unmakeMove() {
         }
         //assert(!(position[lastMove.after].type == PieceType::EMPTY && lastMove.capture));   
         position[lastMove.before] = position[lastMove.after];
-        position[lastMove.after] = lastPosData.pieceCaptured;
+        position[lastMove.after] = lastPosData->pieceCaptured;
     }
 
     // update checks
-    check[Side::WHITE] = lastPosData.whiteInCheck;
-    check[Side::BLACK] = lastPosData.blackInCheck;
+    check[Side::WHITE] = lastPosData->whiteInCheck;
+    check[Side::BLACK] = lastPosData->blackInCheck;
 
     // update castling rights
-    castlingRightsKingSide[Side::WHITE] = lastPosData.whiteCanCastleKingSide;
-    castlingRightsKingSide[Side::BLACK] = lastPosData.blackCanCastleKingSide;
-    castlingRightsQueenSide[Side::WHITE] = lastPosData.whiteCanCastleQueenSide;
-    castlingRightsQueenSide[Side::BLACK] = lastPosData.blackCanCastleQueenSide;
+    castlingRightsKingSide[Side::WHITE] = lastPosData->whiteCanCastleKingSide;
+    castlingRightsKingSide[Side::BLACK] = lastPosData->blackCanCastleKingSide;
+    castlingRightsQueenSide[Side::WHITE] = lastPosData->whiteCanCastleQueenSide;
+    castlingRightsQueenSide[Side::BLACK] = lastPosData->blackCanCastleQueenSide;
 
     // update material difference
-    materialDifference = lastPosData.materialDifference;
+    materialDifference = lastPosData->materialDifference;
 
     // update side to play
-    sideToPlay = lastPosData.whoseTurnItWas;
+    sideToPlay = lastPosData->whoseTurnItWas;
 
 }
 

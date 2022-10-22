@@ -50,8 +50,6 @@ private:
         std::unordered_map<Side, std::vector<int>*> knightAttacks;
     } kingsData;
 
-    LastPositionData lastPosData;
-
 public:
     Board();
     Board(std::array<Piece, 64>& position, Side sideToPlay,
@@ -60,8 +58,9 @@ public:
 
     void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
 
+    void savePositionData(const Move& move, LastPositionData* lastPosData);
     void makeMove(const Move& move);
-    void unmakeMove();
+    void unmakeMove(const LastPositionData* lastPosData);
 
     void reset();
 

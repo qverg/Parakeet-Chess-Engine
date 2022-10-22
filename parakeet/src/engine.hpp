@@ -1,9 +1,10 @@
 #pragma once
 
-#include <limits>
+//#include <limits>
 
 #include "board.hpp"
 #include "types/movecounter.hpp"
+#include "types/positiondatastack.hpp"
 
 class Engine {
 public:
@@ -11,7 +12,10 @@ public:
 
 private:
 
-    std::unordered_map<PieceType, int> pieceValues;
+    std::unordered_map<PieceType, int> m_pieceValues;
+
+    const int m_depth = 3;
+    PositionDataStack m_positionDataStack;
 
     const int infinity = 1000000;
 
@@ -21,7 +25,7 @@ private:
         const int depth,
         int alpha,
         const int beta
-    ) const;
+    );
     
     void countMoves(
         const Board& board,

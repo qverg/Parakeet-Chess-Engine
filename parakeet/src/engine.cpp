@@ -8,16 +8,18 @@
 Engine::Engine() {
     board = Board();
     
-    pieceValues[PieceType::PAWN] = 100;
-    pieceValues[PieceType::KNIGHT] = 300;
-    pieceValues[PieceType::BISHOP] = 350;
-    pieceValues[PieceType::ROOK] = 500;
-    pieceValues[PieceType::QUEEN] = 900;
-    pieceValues[PieceType::KING] = 1000000;
+    m_pieceValues[PieceType::PAWN] = 100;
+    m_pieceValues[PieceType::KNIGHT] = 300;
+    m_pieceValues[PieceType::BISHOP] = 350;
+    m_pieceValues[PieceType::ROOK] = 500;
+    m_pieceValues[PieceType::QUEEN] = 900;
+    m_pieceValues[PieceType::KING] = 1000000;
 
-    board.setPieceValues(pieceValues);
+    board.setPieceValues(m_pieceValues);
     board.fillKnightAttacksArray();
     board.fillKingMovesArray();
+
+    m_positionDataStack.init(m_depth);
 }
 
 int Engine::evaluate() const {
@@ -32,7 +34,7 @@ int Engine::evaluate(const Board& board) const{
     return -board.materialDifference;
 }
 
-int Engine::search(Board& initialBoard, const int depth, int alpha, const int beta) const {
+int Engine::search(Board& initialBoard, const int depth, int alpha, const int beta) {
     if (depth == 0) return evaluate(initialBoard);
     
     
@@ -46,16 +48,15 @@ int Engine::search(Board& initialBoard, const int depth, int alpha, const int be
     }
 
     for (const auto& move : moves) {
-        /*Board newBoard = initialBoard;
-        const Piece& piece = newBoard.position[move.before];
-
+        Board newBoard = initialBoard;
         newBoard.makeMove(move);
 
-        const int eval = -search(newBoard, depth-1, -beta, -alpha);*/
-
+        const int eval = -search(newBoard, depth-1, -beta, -alpha);
+        
+        /*initialBoard.savePositionData(move, m_positionDataStack.push());
         initialBoard.makeMove(move);
         const int eval = -search(initialBoard, depth-1, -beta, -alpha);
-        initialBoard.unmakeMove();
+        initialBoard.unmakeMove(m_positionDataStack.pop());*/
 
         if (eval >= beta) {
             return beta;
@@ -68,8 +69,7 @@ int Engine::search(Board& initialBoard, const int depth, int alpha, const int be
     return alpha;
 }
 
-void Engine::play() {
-
+void Engine::play() {    
     std::vector<Move> moves;
     board.generateAllMoves(moves);
     int bestEval = -infinity;
@@ -79,10 +79,16 @@ void Engine::play() {
     {
         Timer timer;
         for (const Move& move : moves) {
+            Board newBoard = board;
+            newBoard.makeMove(move);
+
+            const int eval = -search(newBoard, 3, -infinity, infinity);
+
+            /*board.savePositionData(move, m_positionDataStack.push());
             board.makeMove(move);
             const int eval = -search(board, 3, -infinity, infinity);
-            board.unmakeMove();
-            //Log(LogLevel::DEBUG, eval);
+            board.unmakeMove(m_positionDataStack.pop());*/
+            
             if (eval > bestEval) {
                 bestEval = eval;
                 bestMove = move;
