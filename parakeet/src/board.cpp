@@ -64,20 +64,7 @@ void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
 }
 
 void Board::makeMove(const Move& move) {
-    Log(LogLevel::DEBUG, "entering makemove");
     Piece piece = position[move.before];    // has to be by value (no pointer!)
-    if (position[move.after].type == PieceType::EMPTY && move.capture) {
-        Log(LogLevel::DEBUG, "stop");
-    }
-    /*if(position[move.before].side != sideToPlay) {
-        Log(LogLevel::DEBUG, "stop");
-    } else {
-        Log(LogLevel::DEBUG, "also stop");
-    }
-    //assert(!(!move.isEnPassant() && move.capture && position[move.after].type == PieceType::EMPTY));
-    if (!move.isEnPassant() && move.capture && position[move.after].type == PieceType::EMPTY) {
-        Log(LogLevel::DEBUG, "stop");
-    }*/
 
     if (move.capture) {
         const int plusMinus = (piece.side==Side::WHITE) ? 1 : -1;
@@ -186,10 +173,10 @@ void Board::reset() {
     position[59] = {PieceType::QUEEN, Side::BLACK};  position[60] = {PieceType::KING, Side::BLACK};
     
     for (int i = 0; i < 8; i++) {
-        //position[i+8]   = {PieceType::PAWN, Side::WHITE};
-        //position[i+48]  = {PieceType::PAWN, Side::BLACK};
-        position[i+24]   = {PieceType::PAWN, Side::WHITE};
-        position[i+32]  = {PieceType::PAWN, Side::BLACK};
+        position[i+8]   = {PieceType::PAWN, Side::WHITE};
+        position[i+48]  = {PieceType::PAWN, Side::BLACK};
+        //position[i+24]   = {PieceType::PAWN, Side::WHITE};
+        //position[i+32]  = {PieceType::PAWN, Side::BLACK};
     }
 
     kingsData.positions[Side::WHITE] = 4; 

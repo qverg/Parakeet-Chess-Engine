@@ -11,7 +11,6 @@
 #include "types/side.hpp"
 #include "types/coordinate.hpp"
 #include "types/piecetype.hpp"
-#include "types/lastpositiondata.hpp"
 
 class Board {
 public:
