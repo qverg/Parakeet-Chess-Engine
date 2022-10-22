@@ -11,7 +11,7 @@ std::array<std::vector<int>, 64> Board::knightAttacksAtSquare;
 std::array<std::vector<int>, 64> Board::kingMovesAtSquare;
 
 
-/* namespace dirs {
+namespace dirs {
     inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
     inline Coordinate north      (Coordinate c)   { return {c.x, c.y+1};   }
     inline Coordinate east       (Coordinate c)   { return {c.x+1, c.y};   }
@@ -20,7 +20,7 @@ std::array<std::vector<int>, 64> Board::kingMovesAtSquare;
     inline Coordinate southeast  (Coordinate c)   { return {c.x+1, c.y-1}; }
     inline Coordinate northwest  (Coordinate c)   { return {c.x-1, c.y+1}; }
     inline Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
-}; */
+};
 
 
 Board::Board() {

@@ -13,17 +13,6 @@
 #include "types/piecetype.hpp"
 #include "types/lastpositiondata.hpp"
 
-namespace dirs {
-    inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
-    inline Coordinate north      (Coordinate c)   { return {c.x, c.y+1};   }
-    inline Coordinate east       (Coordinate c)   { return {c.x+1, c.y};   }
-    inline Coordinate west       (Coordinate c)   { return {c.x-1, c.y};   }
-    inline Coordinate northeast  (Coordinate c)   { return {c.x+1, c.y+1}; }
-    inline Coordinate southeast  (Coordinate c)   { return {c.x+1, c.y-1}; }
-    inline Coordinate northwest  (Coordinate c)   { return {c.x-1, c.y+1}; }
-    inline Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
-};
-
 class Board {
 public:
     std::array<Piece, 64> position;
