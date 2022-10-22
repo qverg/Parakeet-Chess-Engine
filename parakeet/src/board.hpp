@@ -58,9 +58,7 @@ public:
 
     void setPieceValues(std::unordered_map<PieceType, int>& pieceValues);
 
-    void savePositionData(const Move& move, LastPositionData* lastPosData);
     void makeMove(const Move& move);
-    void unmakeMove(const LastPositionData* lastPosData);
 
     void reset();
 

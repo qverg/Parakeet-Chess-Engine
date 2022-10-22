@@ -4,7 +4,6 @@
 
 #include "board.hpp"
 #include "types/movecounter.hpp"
-#include "types/positiondatastack.hpp"
 
 class Engine {
 public:
@@ -15,7 +14,6 @@ private:
     std::unordered_map<PieceType, int> m_pieceValues;
 
     const int m_depth = 3;
-    PositionDataStack m_positionDataStack;
 
     const int infinity = 1000000;
 

@@ -18,8 +18,6 @@ Engine::Engine() {
     board.setPieceValues(m_pieceValues);
     board.fillKnightAttacksArray();
     board.fillKingMovesArray();
-
-    m_positionDataStack.init(m_depth);
 }
 
 int Engine::evaluate() const {
@@ -52,11 +50,6 @@ int Engine::search(Board& initialBoard, const int depth, int alpha, const int be
         newBoard.makeMove(move);
 
         const int eval = -search(newBoard, depth-1, -beta, -alpha);
-        
-        /*initialBoard.savePositionData(move, m_positionDataStack.push());
-        initialBoard.makeMove(move);
-        const int eval = -search(initialBoard, depth-1, -beta, -alpha);
-        initialBoard.unmakeMove(m_positionDataStack.pop());*/
 
         if (eval >= beta) {
             return beta;
@@ -83,11 +76,6 @@ void Engine::play() {
             newBoard.makeMove(move);
 
             const int eval = -search(newBoard, 3, -infinity, infinity);
-
-            /*board.savePositionData(move, m_positionDataStack.push());
-            board.makeMove(move);
-            const int eval = -search(board, 3, -infinity, infinity);
-            board.unmakeMove(m_positionDataStack.pop());*/
             
             if (eval > bestEval) {
                 bestEval = eval;
