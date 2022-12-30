@@ -20,7 +20,7 @@ class Engine:
 
     def skip(self):
         """Skips whatever the engine has to say."""
-        self.analyzer.expect(".+")
+        self.analyzer.expect(".+", timeout=None)
         
         return self.analyzer.after
 
@@ -66,4 +66,3 @@ class Engine:
         print("Sending $play")
         self.analyzer.sendline("$play")
         print(self.skip())
-        

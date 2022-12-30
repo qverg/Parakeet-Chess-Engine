@@ -1,5 +1,7 @@
 #include "board.hpp"
 #include "log.hpp"
+#include "timer.hpp"
+
 #include <cassert>
 
 #define WITHIN_BOUNDS(c)    c.x >= 0 && c.x < 8 && c.y >= 0 && c.y < 8
@@ -64,6 +66,7 @@ void Board::setPieceValues(std::unordered_map<PieceType, int>& pieceValues) {
 }
 
 void Board::makeMove(const Move& move) {
+    //Timer timer;
     Piece piece = position[move.before];    // has to be by value (no pointer!)
 
     if (move.capture) {
@@ -193,8 +196,8 @@ void Board::reset() {
     sideToPlay = Side::WHITE;
 }
 
-void Board::generateMoves(const unsigned short square, std::vector<Move>& moves) const {
-    //Log(LogLevel::DEBUG, "generateMoves");
+void Board::generateMoves(const unsigned short square, std::vector<Move>& moves) const {    
+    //Timer timer;
     const Piece& piece = position[square];
     if (piece.side != sideToPlay) {
         return;
@@ -340,8 +343,6 @@ void Board::generateMoves(const unsigned short square, std::vector<Move>& moves)
 
         } break;
     }
-
-    //Log(LogLevel::DEBUG, "Move generation done");
 }
 
 void Board::generateAllMoves(std::vector<Move>& moves) const {

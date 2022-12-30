@@ -40,12 +40,16 @@ int Engine::search(Board& initialBoard, const int depth, int alpha, const int be
     initialBoard.generateAllMoves(moves);
 
     if (moves.size() == 0) {
-        //if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
+        if (initialBoard.check.at(initialBoard.sideToPlay)) return -infinity;
         Log(LogLevel::DEBUG, "Stalemate found");
         return 0;
     }
 
-    for (const auto& move : moves) {
+    std::vector<Move> orderedMoves;
+    orderedMoves.reserve(moves.size());
+    orderMoves(moves, orderedMoves);
+
+    for (const auto& move : orderedMoves) {
         Board newBoard = initialBoard;
         newBoard.makeMove(move);
 
@@ -65,17 +69,22 @@ int Engine::search(Board& initialBoard, const int depth, int alpha, const int be
 void Engine::play() {    
     std::vector<Move> moves;
     board.generateAllMoves(moves);
+
+    std::vector<Move> orderedMoves;
+    orderedMoves.reserve(moves.size());
+    orderMoves(moves, orderedMoves);
+
     int bestEval = -infinity;
     Move bestMove;
     
     Log(LogLevel::DEBUG, "Starting search");
     {
-        Timer timer;
-        for (const Move& move : moves) {
+        //Timer timer;
+        for (const Move& move : orderedMoves) {
             Board newBoard = board;
             newBoard.makeMove(move);
 
-            const int eval = -search(newBoard, 3, -infinity, infinity);
+            const int eval = -search(newBoard, m_depth, -infinity, infinity);
             
             if (eval > bestEval) {
                 bestEval = eval;
@@ -92,6 +101,21 @@ void Engine::play() {
         Log(LogLevel::INFO, "No moves found");
     }
     Log(LogLevel::INFO, board.materialDifference);
+}
+
+void Engine::orderMoves(const std::vector<Move>& moves, std::vector<Move>& orderedMoves) {
+    for (const Move& move : moves) {
+        if (move.capture) orderedMoves.push_back(move);
+    }
+    /* for (const Move& move : moves) {
+        if (!move.capture && move.willBeCheck) orderedMoves.push_back(move);
+    }
+    for (const Move& move : moves) {
+        if (!move.capture && !move.willBeCheck) orderedMoves.push_back(move);
+    } */
+    for (const Move& move : moves) {
+        if (!move.capture) orderedMoves.push_back(move);
+    }
 }
 
 
