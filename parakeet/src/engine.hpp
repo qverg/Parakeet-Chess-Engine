@@ -13,7 +13,7 @@ private:
 
     std::unordered_map<PieceType, int> m_pieceValues;
 
-    const int m_depth = 2;
+    const int m_depth = 5;
 
     const int infinity = 1000000;
 

@@ -14,14 +14,14 @@ std::array<std::vector<int>, 64> Board::kingMovesAtSquare;
 
 
 namespace dirs {
-    inline Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
-    inline Coordinate north      (Coordinate c)   { return {c.x, c.y+1};   }
-    inline Coordinate east       (Coordinate c)   { return {c.x+1, c.y};   }
-    inline Coordinate west       (Coordinate c)   { return {c.x-1, c.y};   }
-    inline Coordinate northeast  (Coordinate c)   { return {c.x+1, c.y+1}; }
-    inline Coordinate southeast  (Coordinate c)   { return {c.x+1, c.y-1}; }
-    inline Coordinate northwest  (Coordinate c)   { return {c.x-1, c.y+1}; }
-    inline Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
+    constexpr Coordinate south      (Coordinate c)   { return {c.x, c.y-1};   }
+    constexpr Coordinate north      (Coordinate c)   { return {c.x, c.y+1};   }
+    constexpr Coordinate east       (Coordinate c)   { return {c.x+1, c.y};   }
+    constexpr Coordinate west       (Coordinate c)   { return {c.x-1, c.y};   }
+    constexpr Coordinate northeast  (Coordinate c)   { return {c.x+1, c.y+1}; }
+    constexpr Coordinate southeast  (Coordinate c)   { return {c.x+1, c.y-1}; }
+    constexpr Coordinate northwest  (Coordinate c)   { return {c.x-1, c.y+1}; }
+    constexpr Coordinate southwest  (Coordinate c)   { return {c.x-1, c.y-1}; }
 };
 
 
@@ -515,7 +515,7 @@ void Board::generateMovesInDirection(
     }
 }
 
-PieceType Board::getNextOpponentPieceInDirection(
+constexpr PieceType Board::getNextOpponentPieceInDirection(
         const Coordinate& coord,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         const Side& opponent
@@ -523,7 +523,7 @@ PieceType Board::getNextOpponentPieceInDirection(
     return getNextOpponentPieceInDirection(coord, position, directionFunc, opponent);
 }
 
-PieceType Board::getNextOpponentPieceInDirection(
+constexpr PieceType Board::getNextOpponentPieceInDirection(
         const Coordinate& coord,
         const std::array<Piece, 64>& position,
         const std::function<Coordinate(Coordinate)>& directionFunc,

@@ -75,13 +75,13 @@ private:
         const Side& opponent
     ) const;
 
-    PieceType getNextOpponentPieceInDirection(
+    constexpr PieceType getNextOpponentPieceInDirection(
         const Coordinate& coord,
         const std::function<Coordinate(Coordinate)>& directionFunc,
         const Side& opponent
     ) const;
 
-    PieceType getNextOpponentPieceInDirection(
+    constexpr PieceType getNextOpponentPieceInDirection(
         const Coordinate& coord,
         const std::array<Piece, 64>& position,
         const std::function<Coordinate(Coordinate)>& directionFunc,
