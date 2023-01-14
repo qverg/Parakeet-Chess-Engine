@@ -47,6 +47,8 @@ static void run() {
      * $reset           reset board to normal starting position
      * $testmovegen     test move generation (count moves in given position)
      * $exitboard       exit the current board
+     * $getposition     prints the current position
+     * $play            calculates what move it thinks best, plays it and displays it
      */
 
     Engine engine;
