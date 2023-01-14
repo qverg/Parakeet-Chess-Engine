@@ -28,4 +28,5 @@ Keep in mind the GUI is a little buggy and may randomly decide not to work.
 | ``$testmovegen`` | Test move generation by counting the number of available moves in the position |
 | ``$exitboard`` | Go back to the starting prompt where you can either ``$reset`` or enter a FEN |
 | ``$getposition`` | Prints the current position. Capital letters are white, lowercase black, dots are empty. It goes from a1 to h1, a2 to h2 and so on to h8. |
-| 
+
+Use command line arguments ``debug``, ``info`` or ``warn`` to see log messages while the program is running.
