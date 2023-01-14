@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "log.hpp"
 #include "timer.hpp"
+#include "utility.hpp"
 
 #include <vector>
 #include <iostream>
@@ -96,6 +97,7 @@ void Engine::play() {
 
 
     if (bestMove.beforeAndAfterDifferent()) {
+        std::cout << algebraic(bestMove, board.position) << std::endl;  // TEMPORARY
         board.makeMove(bestMove);
     } else {
         Log(LogLevel::INFO, "No moves found");
