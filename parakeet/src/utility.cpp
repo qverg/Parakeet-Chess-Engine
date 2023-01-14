@@ -190,6 +190,9 @@ std::string getPositionString(Board& board) {
 }
 
 std::string algebraic(const Move& move, const std::array<Piece, 64>& position) {
+    if (move.isKingSideCastle()) return "O-O";
+    if (move.isQueenSideCastle()) return "O-O-O";
+
     std::string out = "";
     switch (position[move.before].type) {
         case (PieceType::KING):     out += "K"; break;
@@ -199,8 +202,17 @@ std::string algebraic(const Move& move, const std::array<Piece, 64>& position) {
         case (PieceType::ROOK):     out += "R"; break;
     }
 
+    if (move.capture) out += "x";
+
     out += (char) (move.after%8) + 'a';
     out += std::to_string(move.after/8 + 1);
+
+    if (move.promotion) {
+        if (move.special1 && move.special0) out += "=Q";
+        else if (move.special1 && !move.special0) out += "=R";
+        else if (!move.special1 && move.special0) out += "=B";
+        else out += "=N";
+    }
 
     return out;
 }
