@@ -1,18 +1,20 @@
 import pygame
-
+import os
+real_path = os.path.realpath(__file__)
+dir_path = os.path.dirname(real_path)
 pieceTypes = {
-    "K" : pygame.image.load("res/white_king.png"),
-    "Q" : pygame.image.load("res/white_queen.png"),
-    "B" : pygame.image.load("res/white_bishop.png"),
-    "N" : pygame.image.load("res/white_knight.png"),
-    "R" : pygame.image.load("res/white_rook.png"),
-    "P" : pygame.image.load("res/white_pawn.png"),
-    "k" : pygame.image.load("res/black_king.png"),
-    "q" : pygame.image.load("res/black_queen.png"),
-    "b" : pygame.image.load("res/black_bishop.png"),
-    "n" : pygame.image.load("res/black_knight.png"),
-    "r" : pygame.image.load("res/black_rook.png"),
-    "p" : pygame.image.load("res/black_pawn.png")
+    "K" : pygame.image.load(dir_path+"/res/white_king.png"),
+    "Q" : pygame.image.load(dir_path+"/res/white_queen.png"),
+    "B" : pygame.image.load(dir_path+"/res/white_bishop.png"),
+    "N" : pygame.image.load(dir_path+"/res/white_knight.png"),
+    "R" : pygame.image.load(dir_path+"/res/white_rook.png"),
+    "P" : pygame.image.load(dir_path+"/res/white_pawn.png"),
+    "k" : pygame.image.load(dir_path+"/res/black_king.png"),
+    "q" : pygame.image.load(dir_path+"/res/black_queen.png"),
+    "b" : pygame.image.load(dir_path+"/res/black_bishop.png"),
+    "n" : pygame.image.load(dir_path+"/res/black_knight.png"),
+    "r" : pygame.image.load(dir_path+"/res/black_rook.png"),
+    "p" : pygame.image.load(dir_path+"/res/black_pawn.png")
 }
 
 class Piece:

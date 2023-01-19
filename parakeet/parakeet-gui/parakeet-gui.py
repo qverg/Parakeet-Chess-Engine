@@ -1,6 +1,10 @@
 import pygame
 from piece import Piece, EmptySquare
 from engine import Engine
+import os
+
+real_path = os.path.realpath(__file__)
+dir_path = os.path.dirname(real_path)
 
 size = width, height = 1000, 600
 board_size = 600
@@ -90,7 +94,7 @@ def main():
     font = pygame.font.SysFont('freesandbold.ttf', 50)
     
     # load and set the logo
-    logo = pygame.image.load("res/parakeet-logo.png")
+    logo = pygame.image.load(dir_path+"/res/parakeet-logo.png")
     pygame.display.set_icon(logo)
     pygame.display.set_caption("Parakeet Chess Engine")
 
@@ -103,7 +107,7 @@ def main():
                             # (None if no piece is selected)
 
     # initialise engine
-    parakeet = Engine("../bin/parakeet")
+    parakeet = Engine("'"+dir_path+"/../bin/parakeet'")
     parakeet.reset_board()
 
     # Match board position to engine
@@ -208,8 +212,8 @@ def main():
                 running = False
 
         pygame.display.flip()
-
-    parakeet.close()
+    pygame.quit()
+    #parakeet.close()
 
 #==========================================================================================
 if __name__=="__main__":
