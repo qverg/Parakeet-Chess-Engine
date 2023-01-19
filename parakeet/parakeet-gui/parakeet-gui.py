@@ -107,7 +107,7 @@ def main():
                             # (None if no piece is selected)
 
     # initialise engine
-    parakeet = Engine("'"+dir_path+"/../bin/parakeet'")
+    parakeet = Engine("'"+dir_path+"/../bin/parakeet.out'")
     parakeet.reset_board()
 
     # Match board position to engine
