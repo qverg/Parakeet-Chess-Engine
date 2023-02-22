@@ -2,11 +2,11 @@
 
 ### Requirements 
 #### C++ code
- - Windows probably, not tested on other OSs but might work
+ - Use Linux branch for linux, should work great
+ - Use master branch for Windows might crash randomly if it's feeling quirky
  - I'm using g++ to compile (C++ 14 or higher).
 
 #### GUI (not necessary for just running the engine)
- - Definitely windows
  - Python 3 (I'm using 3.10)
     - pygame
     - pexpect
