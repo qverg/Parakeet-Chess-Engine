@@ -103,7 +103,7 @@ def main():
                             # (None if no piece is selected)
 
     # initialise engine
-    parakeet = Engine("../bin/parakeet")
+    parakeet = Engine("../bin/parakeet.exe")
     parakeet.reset_board()
 
     # Match board position to engine
